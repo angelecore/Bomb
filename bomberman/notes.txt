@@ -1,0 +1,3 @@
+﻿i = indestructible blocks
+c = destructable blocs
+v = empty spaces
