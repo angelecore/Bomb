@@ -61,6 +61,16 @@ namespace bomberman.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap character_positioned {
+            get {
+                object obj = ResourceManager.GetObject("character_positioned", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to i i i i i i i
         ///i v c c v v i
         ///i v i v i v i
