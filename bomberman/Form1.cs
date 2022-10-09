@@ -1,9 +1,11 @@
-using System.Windows.Forms;
+using WebSocketSharp;
 
 namespace bomberman
 {
     public partial class Form1 : Form
     {
+        private WebSocket? ws;
+
         public enum Directions
         {
             Right,
@@ -11,17 +13,21 @@ namespace bomberman
             Up,
             Down
         }
-        private classes.Block[,] blockmap = new classes.Block[7,7];
+        private classes.Block[,] blockmap = new classes.Block[7, 7];
         classes.Player PlayerObject;
         public Form1()
         {
             InitializeComponent();
             Initializemap(1);
+
+            this.ws = new WebSocket("ws://127.0.0.1:7980/Laputa");
+            ws.Connect();
+
         }
 
         private void Initializemap(int map)
         {
-            
+
             if (map <= 0)
             {
                 MessageBox.Show(String.Format("no map"));
@@ -39,20 +45,21 @@ namespace bomberman
             int blocksize = 50;
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
             {
-                
+
                 int currentx = 0;
                 int currenty = 0;
                 string line = String.Empty;
-                int currentCollum =0;
+                int currentCollum = 0;
                 int currentRow = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
                     string[] chararray = line.Split(' ');
                     foreach (string charele in chararray)
-                    { Button block = new Button();
+                    {
+                        Button block = new Button();
                         classes.BlockType type = classes.BlockType.Empty;
                         block.Size = new Size(blocksize, blocksize);
-                        switch(charele)
+                        switch (charele)
                         {
                             case "i": // indestructable
                                 block.BackColor = Color.Black;
@@ -69,14 +76,14 @@ namespace bomberman
                         block.Location = new Point(currentx, currenty);
                         this.Controls.Add(block);
                         currentx += blocksize;
-                        this.blockmap[currentRow, currentCollum] = new classes.Block(block ,type);
+                        this.blockmap[currentRow, currentCollum] = new classes.Block(block, type);
                         currentCollum++;
                     }
                     currentRow++;
                     currentCollum = 0;
                     currentx = 0;
                     currenty += blocksize;
-                    
+
                 }
                 reader.Close();
             }
@@ -94,7 +101,7 @@ namespace bomberman
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            
+
         }
 
         private void MovementTimer_Tick(object sender, EventArgs e)
@@ -107,10 +114,10 @@ namespace bomberman
                 switch (playerdirection)
                 {
                     case Directions.Right:
-                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X+ speed, PlayerObject.PlayerSprite.Location.Y);
-                        if(blockmap[row,collum+1].BlockObj.Location == PlayerObject.PlayerSprite.Location)
+                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X + speed, PlayerObject.PlayerSprite.Location.Y);
+                        if (blockmap[row, collum + 1].BlockObj.Location == PlayerObject.PlayerSprite.Location)
                         {
-                            move =false;
+                            move = false;
                             PlayerObject.CurrentCollum++;
                             //PlayerObject.CurrentRow++;
                             this.MovementTimer.Enabled = false;
@@ -127,8 +134,8 @@ namespace bomberman
                         }
                         break;
                     case Directions.Up:
-                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X , PlayerObject.PlayerSprite.Location.Y - speed);
-                        if (blockmap[row-1, collum].BlockObj.Location == PlayerObject.PlayerSprite.Location)
+                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X, PlayerObject.PlayerSprite.Location.Y - speed);
+                        if (blockmap[row - 1, collum].BlockObj.Location == PlayerObject.PlayerSprite.Location)
                         {
                             move = false;
                             //PlayerObject.CurrentCollum++;
@@ -137,8 +144,8 @@ namespace bomberman
                         }
                         break;
                     case Directions.Down:
-                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X, PlayerObject.PlayerSprite.Location.Y+ speed);
-                        if (blockmap[row+1, collum].BlockObj.Location == PlayerObject.PlayerSprite.Location)
+                        PlayerObject.PlayerSprite.Location = new Point(PlayerObject.PlayerSprite.Location.X, PlayerObject.PlayerSprite.Location.Y + speed);
+                        if (blockmap[row + 1, collum].BlockObj.Location == PlayerObject.PlayerSprite.Location)
                         {
                             move = false;
                             //PlayerObject.CurrentCollum++;
@@ -159,11 +166,12 @@ namespace bomberman
                 case Keys.Right:
                     //int collum = PlayerObject.CurrentCollum;
                     //int row = PlayerObject.CurrentRow;
-                    if (collum + 1 < blockmap.GetLength(1) && blockmap[row, collum+1].Type == classes.BlockType.Empty)
+                    if (collum + 1 < blockmap.GetLength(1) && blockmap[row, collum + 1].Type == classes.BlockType.Empty)
                     {
                         move = true;
                         this.MovementTimer.Enabled = true;
                         playerdirection = Directions.Right;
+                        SendMessageToServer("Right");
                     }
                     break;
                 case Keys.Left:
@@ -174,30 +182,46 @@ namespace bomberman
                         move = true;
                         this.MovementTimer.Enabled = true;
                         playerdirection = Directions.Left;
+                        SendMessageToServer("Left");
                     }
                     break;
                 case Keys.Down:
                     //int collum = PlayerObject.CurrentCollum;
                     //int row = PlayerObject.CurrentRow;
-                    if (row + 1 < blockmap.GetLength(0) && blockmap[row+1, collum].Type == classes.BlockType.Empty)
+                    if (row + 1 < blockmap.GetLength(0) && blockmap[row + 1, collum].Type == classes.BlockType.Empty)
                     {
                         move = true;
                         this.MovementTimer.Enabled = true;
                         playerdirection = Directions.Down;
+                        SendMessageToServer("Down");
                     }
                     break;
                 case Keys.Up:
                     //int collum = PlayerObject.CurrentCollum;
                     //int row = PlayerObject.CurrentRow;
-                    if (row - 1 > 0 && blockmap[row-1, collum].Type == classes.BlockType.Empty)
+                    if (row - 1 > 0 && blockmap[row - 1, collum].Type == classes.BlockType.Empty)
                     {
                         move = true;
                         this.MovementTimer.Enabled = true;
                         playerdirection = Directions.Up;
+                        SendMessageToServer("Up");
                     }
                     break;
 
             }
         }
+
+        private void SendMessageToServer(string message)
+        {
+            if (ws != null && ws.ReadyState != WebSocketState.Closed)
+            {
+                ws.Send(message);
+            }
+        }
+        private void frm_menu_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            System.Windows.Forms.Application.Exit();
+        }
+
     }
 }

@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using WebSocketSharp;
+﻿using WebSocketSharp;
 
 namespace bomberman
 {
@@ -45,23 +36,19 @@ namespace bomberman
 
         private void button1_Click(object sender, EventArgs e)
         {
-            using (WebSocket ws = new WebSocket("ws://127.0.0.1:7980/Laputa"))
-            {
-                ws.OnMessage += Ws_OnMessage;
-                ws.Connect();
-                ws.Send("ha");
-                Program.hideForm();
-                Form1 form1 = new Form1();
-                form1.Show();
-                Console.Write('d');
-                var xxx = "da";
-                /*Console.ReadKey();*/
-            }
+            Program.hideForm();
+            Form1 form1 = new Form1();
+            form1.Show();
         }
 
         private static void Ws_OnMessage(object sender, MessageEventArgs e)
         {
             Console.WriteLine("Received - " + e.Data);
+        }
+
+        private void frm_menu_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            System.Windows.Forms.Application.Exit();
         }
     }
 }
