@@ -36,9 +36,9 @@ namespace bomberman
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Program.hideForm();
-            Form1 form1 = new Form1();
-            form1.Show();
+            this.Hide();
+            Form1 form = new Form1(textBox1.Text);
+            form.Show();
         }
 
         private static void Ws_OnMessage(object sender, MessageEventArgs e)

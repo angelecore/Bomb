@@ -1,7 +1,7 @@
-﻿i i i i i i i
-i v c c v v i
-i v i v i v i
-i c v c v v i
-i v i v i v i
-i c c c v v i
-i i i i i i i
+﻿#######
+#1cc..#
+#.#.#.#
+#c.c..#
+#.#.#.#
+#ccc.2#
+#######

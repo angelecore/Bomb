@@ -7,13 +7,50 @@ namespace bomberman
     {
         protected override void OnMessage(MessageEventArgs e)
         {
-            Console.WriteLine(e.Data);
+            Console.WriteLine("Server: {0}", e.Data);
+
+            if (e.Data.Contains("Connected"))
+            {
+                foreach (var p in Sessions.ActiveIDs.ToArray().SubArray(0, Sessions.ActiveIDs.Count() - 1))
+                {
+                    Send(string.Format("Joined {1}", e.Data, p.ToString()));
+                }
+                Send(string.Format("Connected {1}", e.Data, Sessions.ActiveIDs.Last()));
+                Sessions.Broadcast(string.Format("Joined {1}", e.Data, Sessions.ActiveIDs.Last()));
+            } else
+            {
+                Sessions.Broadcast(e.Data);
+            }
+        }
+    }
+
+    public class MultiFormContext : ApplicationContext
+    {
+        private int openForms;
+        public MultiFormContext(params Form[] forms)
+        {
+            openForms = forms.Length;
+
+            foreach (var form in forms)
+            {
+                /*
+                form.FormClosed += (s, args) =>
+                {
+                    //When we have closed the last of the "starting" forms, 
+                    //end the program.
+                    if (Interlocked.Decrement(ref openForms) == 0)
+                        ExitThread();
+                };
+                */
+
+                form.Show();
+            }
         }
     }
 
     internal class Program
     {
-        public static Form2? Form2;
+        public static Form2? P1, P2;
 
         /// <summary>
         ///  The main entry point for the application.
@@ -22,7 +59,6 @@ namespace bomberman
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Form2 = new Form2();
 
             try
             {
@@ -42,15 +78,11 @@ namespace bomberman
             {
             }
 
-            Application.Run(Form2);
-        }
+            P1 = new Form2();
+            P2 = new Form2();
 
-        public static void hideForm()
-        {
-            if (Form2 != null)
-            {
-                Form2.Hide();
-            }
+            var context = new MultiFormContext(new Form2(), new Form2());
+            Application.Run(context);
         }
 
         private static void Ws_OnMessage(object sender, MessageEventArgs e)
