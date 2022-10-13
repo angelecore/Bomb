@@ -81,13 +81,17 @@ namespace bomberman.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #######
-        ///#1cc..#
-        ///#.#.#.#
-        ///#c.c..#
-        ///#.#.#.#
-        ///#ccc.2#
-        ///#######.
+        ///   Looks up a localized string similar to #############
+        ///#1.c.cc..c..#
+        ///#.#c#.#.#.#.#
+        ///#c.c..cccc..#
+        ///#c#c#c#.#.#.#
+        ///#..c...c....#
+        ///#.#c#c#.#.#.#
+        ///#c.c...c..cc#
+        ///#.#c#.#.#c#.#
+        ///#.cc.cc.cc.2#
+        ///#############.
         /// </summary>
         internal static string Level1 {
             get {

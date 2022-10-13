@@ -11,12 +11,12 @@ namespace bomberman.classes
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
 
-        public const int Width = 7;
-        public const int Height = 7;
+        public int Width;
+        public int Height;
 
-        public Block[,] Grid = new Block[Height, Width];
+        public Block[,] Grid;
 
-        public int[,] ExplosionIntensity = new int[Height, Width];
+        public int[,] ExplosionIntensity;
 
         private List<Vector2f> possiblePlayerPos = new List<Vector2f>();
 
@@ -210,12 +210,23 @@ namespace bomberman.classes
         {
             var maplayout = Properties.Resources.Level1;
 
+            Height = maplayout.Split("\r\n").Length;
+
+
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
             {
                 string line = String.Empty;
                 int currentRow = 0;
+
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (Width == 0)
+                    {
+                        Width = line.Length;
+                        Grid = new Block[Height, Width];
+                        ExplosionIntensity = new int[Height, Width];
+                    }
+
                     char[] chararray = line.ToArray();
                     int currentCollum = 0;
                     foreach (char charele in chararray)
@@ -232,7 +243,7 @@ namespace bomberman.classes
                             case '.':
                                 break;
                             default:
-                                possiblePlayerPos.Add(new Vector2f(currentRow, currentCollum));
+                                possiblePlayerPos.Add(new Vector2f(currentCollum, currentRow));
                                 break;
                         }
                         this.Grid[currentRow, currentCollum] = new Block(new Vector2f(currentCollum, currentRow), type);

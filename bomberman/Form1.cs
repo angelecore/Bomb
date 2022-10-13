@@ -17,7 +17,7 @@ namespace bomberman
         private Dictionary<string, Tuple<PictureBox, Label>> bombSprites = new Dictionary<string, Tuple<PictureBox, Label>>();
 
         GameState gameState;
-        private Stopwatch stopwatch;
+        private Stopwatch stopwatch = new Stopwatch();
         public Form1(string name)
         {
             
@@ -227,73 +227,68 @@ namespace bomberman
 
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
-            if (stopwatch == null)
+            stopwatch.Stop();
+            TimeSpan ts = stopwatch.Elapsed;
+            stopwatch.Restart();
+
+            var explodedBombs = gameState.UpdateBombTimers(ts.TotalMilliseconds);
+            foreach (var explodedBomb in explodedBombs)
             {
-                stopwatch = new Stopwatch();
-                stopwatch.Restart();
+                this.Controls.Remove(bombSprites[explodedBomb.Id].Item1);
+                this.Controls.Remove(bombSprites[explodedBomb.Id].Item2);
+                bombSprites.Remove(explodedBomb.Id);
             }
-            else
+
+            foreach (var bomb in gameState.Bombs)
             {
-                stopwatch.Stop();
-                TimeSpan ts = stopwatch.Elapsed;
-                var explodedBombs = gameState.UpdateBombTimers(ts.TotalMilliseconds);
-                foreach (var explodedBomb in explodedBombs)
-                {
-                    this.Controls.Remove(bombSprites[explodedBomb.Id].Item1);
-                    this.Controls.Remove(bombSprites[explodedBomb.Id].Item2);
-                    bombSprites.Remove(explodedBomb.Id);
-                }
+                bombSprites[bomb.Id].Item2.Text = ((int)bomb.Timer).ToString();
+            }
 
-                foreach (var bomb in gameState.Bombs)
-                {
-                    bombSprites[bomb.Id].Item2.Text = ((int)bomb.Timer).ToString();
-                }
-
-                UpdateMap();
+            UpdateMap();
                 
-                var movingPlayers = gameState.GetMovingPlayers();
-                foreach (var player in movingPlayers)
+            var movingPlayers = gameState.GetMovingPlayers();
+            foreach (var player in movingPlayers)
+            {
+                int speed = 5;
+                int X = player.Position.X;
+                int Y = player.Position.Y;
+
+                var sprite = playerSprites[player.Id];
+
+                switch (player.Direction)
                 {
-                    int speed = 5;
-                    int X = player.Position.X;
-                    int Y = player.Position.Y;
-
-                    var sprite = playerSprites[player.Id];
-
-                    switch (player.Direction)
-                    {
-                        case Directions.Right:
-                            sprite.Location = new Point(sprite.Location.X + speed, sprite.Location.Y);
-                            if (blockmap[Y, X + 1].Location == sprite.Location)
-                            {
-                                player.Move();
-                            }
-                            break;
-                        case Directions.Left:
-                            sprite.Location = new Point(sprite.Location.X - speed, sprite.Location.Y);
-                            if (blockmap[Y, X - 1].Location == sprite.Location)
-                            {
-                                player.Move();
-                            }
-                            break;
-                        case Directions.Up:
-                            sprite.Location = new Point(sprite.Location.X, sprite.Location.Y - speed);
-                            if (blockmap[Y - 1, X].Location == sprite.Location)
-                            {
-                                player.Move();
-                            }
-                            break;
-                        case Directions.Down:
-                            sprite.Location = new Point(sprite.Location.X, sprite.Location.Y + speed);
-                            if (blockmap[Y + 1, X].Location == sprite.Location)
-                            {
-                                player.Move();
-                            }
-                            break;
-                    }
-
+                    case Directions.Right:
+                        sprite.Location = new Point(sprite.Location.X + speed, sprite.Location.Y);
+                        if (blockmap[Y, X + 1].Location == sprite.Location)
+                        {
+                            player.Move();
+                        }
+                        break;
+                    case Directions.Left:
+                        sprite.Location = new Point(sprite.Location.X - speed, sprite.Location.Y);
+                        if (blockmap[Y, X - 1].Location == sprite.Location)
+                        {
+                            player.Move();
+                        }
+                        break;
+                    case Directions.Up:
+                        sprite.Location = new Point(sprite.Location.X, sprite.Location.Y - speed);
+                        if (blockmap[Y - 1, X].Location == sprite.Location)
+                        {
+                            player.Move();
+                        }
+                        break;
+                    case Directions.Down:
+                        sprite.Location = new Point(sprite.Location.X, sprite.Location.Y + speed);
+                        if (blockmap[Y + 1, X].Location == sprite.Location)
+                        {
+                            player.Move();
+                        }
+                        break;
                 }
+
             }
+            
         }
         
 
