@@ -12,18 +12,23 @@
     public class Player
     {
         public string Id { get; set; }
-        public PictureBox PlayerSprite { get; set; }
-        public int CurrentCollum { get; set; }
-        public int CurrentRow { get; set; }
+        public Vector2f Position { get; set; }
         public Directions Direction { get; set; }
 
-        public Player(string id, PictureBox sprite, int collum, int row)
+        public Player(string id, Vector2f position)
         {
             this.Id = id;
-            this.PlayerSprite = sprite;
-            this.CurrentCollum = collum;
-            this.CurrentRow = row;
+            this.Position = position;
             this.Direction = Directions.Idle;
+        }
+
+        public void Move()
+        {
+            Position = Utils.AddVectors(
+                Position, 
+                Utils.GetDirectionVector(Direction)
+            );
+            Direction = Directions.Idle;
         }
 
         public void SetDirection(Directions direction)

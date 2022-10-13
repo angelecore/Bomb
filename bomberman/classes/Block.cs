@@ -6,14 +6,15 @@
         Destructable,
         Empty
     }
+
     internal class Block
     {
-        public Control BlockObj { get; set; }
+        public Vector2f Position;
         public BlockType Type { get; set; }
 
-        public Block(Control blockObj, BlockType objType)
+        public Block(Vector2f position, BlockType objType)
         {
-            this.BlockObj = blockObj;
+            this.Position = position;
             this.Type = objType;
         }
 
