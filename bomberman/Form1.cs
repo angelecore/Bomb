@@ -1,4 +1,5 @@
 using bomberman.classes;
+using System.Diagnostics;
 using WebSocketSharp;
 
 namespace bomberman
@@ -9,11 +10,17 @@ namespace bomberman
 
         const int blocksize = 50;
         private Button[,] blockmap;
+
+        // key is the player id
         private Dictionary<string, PictureBox> playerSprites = new Dictionary<string, PictureBox>();
+        // key is the bomb id
+        private Dictionary<string, Tuple<PictureBox, Label>> bombSprites = new Dictionary<string, Tuple<PictureBox, Label>>();
 
         GameState gameState;
+        private Stopwatch stopwatch;
         public Form1(string name)
         {
+            
             InitializeComponent();
 
             gameState = new GameState(name);
@@ -35,6 +42,38 @@ namespace bomberman
             
         }
 
+        public void UpdateMap()
+        {
+            for (int y = 0; y < gameState.Grid.GetLength(0); y++)
+            {
+                for (int x = 0; x < gameState.Grid.GetLength(1); x++)
+                {
+                    var cell = gameState.Grid[y, x];
+                    var block = blockmap[y, x];
+                    if (gameState.ExplosionIntensity[y, x] > 0)
+                        gameState.ExplosionIntensity[y, x]--;
+
+                    switch (cell.Type)
+                    {
+                        case BlockType.InDestructable: // indestructable
+                            block.BackColor = Color.Black;
+                            break;
+                        case BlockType.Destructable: // destructable
+                            block.BackColor = Color.DarkGray;
+                            break;
+                        case BlockType.Empty:
+                            block.BackColor = Color.LightGray;
+                            break;
+                    }
+
+                    if (gameState.ExplosionIntensity[y, x] > 0)
+                    { 
+                        block.BackColor = Color.FromArgb(255 - 40 * gameState.ExplosionIntensity[y, x], 255, 192, 0);
+                    }
+                }
+            }
+        }
+
         public void DrawMap()
         {
             // Create map
@@ -52,10 +91,7 @@ namespace bomberman
                         var block = gameState.Grid[y, x];
 
                         Button button = new Button();
-                        BlockType type = BlockType.Empty;
-
                         button.Size = new Size(blocksize, blocksize);
-                       
                         switch (block.Type)
                         {
                             case BlockType.InDestructable: // indestructable
@@ -107,10 +143,40 @@ namespace bomberman
                     var split = value.Split(" ");
                     gameState.PerformAction(split[0], split[1]);
                     break;
+                case "Bomb":
+                    HandleBombPlacement(value);
+                    break;
             }
         }
        
-        
+        private void HandleBombPlacement(string id)
+        {
+            var bomb = gameState.PlaceBomb(id);
+            if (bomb == null) return;
+
+            PictureBox bombImg = new PictureBox();
+            bombImg.Image = Properties.Resources.bombSprite;
+            bombImg.Size = new Size(blocksize, blocksize);
+            bombImg.SizeMode = PictureBoxSizeMode.Zoom;
+            bombImg.BackColor = Color.Transparent;
+            bombImg.Location = new Point(bomb.Position.X * blocksize, bomb.Position.Y * blocksize);
+            this.Controls.Add(bombImg);
+            bombImg.BringToFront();
+
+
+            Label timer = new Label();
+            timer.Location = bombImg.Location;
+            timer.Size = new Size(15, 15);
+            timer.Text = ((int)bomb.Timer).ToString(); 
+            timer.Parent = bombImg;
+            timer.BackColor = Color.Transparent;
+
+            this.Controls.Add(timer);
+            timer.BringToFront();
+            bombSprites[bomb.Id] = new Tuple<PictureBox, Label>(bombImg, timer);
+            playerSprites[id].BringToFront();
+        }
+
         private void HandlePlayerJoined(string id)
         {
             var pos = gameState.AddEnemy(id);
@@ -128,7 +194,7 @@ namespace bomberman
             PlayerImg.Location = new Point(pos.X * blocksize, pos.Y * blocksize);
             this.Controls.Add(PlayerImg);
             PlayerImg.BringToFront();
-
+            
             playerSprites[id] = PlayerImg;
         }
 
@@ -138,16 +204,20 @@ namespace bomberman
 
             var pos = gameState.AddOwner(id);
 
-            PictureBox PlayerImg = new PictureBox();
+            PictureBox PlayerImg = new PictureBox(); 
+
             PlayerImg.Image = Properties.Resources.character_positioned;
+           
             PlayerImg.Size = new Size(blocksize, blocksize);
+            PlayerImg.Parent = blockmap[1, 1];
             PlayerImg.SizeMode = PictureBoxSizeMode.Zoom;
-            Console.WriteLine("{0} {1}", pos.X, pos.Y);
+            PlayerImg.BackColor = Color.Transparent;
             PlayerImg.Location = new Point(pos.X * blocksize, pos.Y * blocksize);
             this.Controls.Add(PlayerImg);
             PlayerImg.BringToFront();
 
             playerSprites[id] = PlayerImg;
+   
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -157,47 +227,72 @@ namespace bomberman
 
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
-            var movingPlayers = gameState.GetMovingPlayers();
-            foreach (var player in movingPlayers)
+            if (stopwatch == null)
             {
-                int speed = 5;
-                int X = player.Position.X;
-                int Y = player.Position.Y;
-
-                var sprite = playerSprites[player.Id];
-
-                switch (player.Direction)
+                stopwatch = new Stopwatch();
+                stopwatch.Restart();
+            }
+            else
+            {
+                stopwatch.Stop();
+                TimeSpan ts = stopwatch.Elapsed;
+                var explodedBombs = gameState.UpdateBombTimers(ts.TotalMilliseconds);
+                foreach (var explodedBomb in explodedBombs)
                 {
-                    case Directions.Right:
-                        sprite.Location = new Point(sprite.Location.X + speed, sprite.Location.Y);
-                        if (blockmap[Y, X + 1].Location == sprite.Location)
-                        {
-                            player.Move();
-                        }
-                        break;
-                    case Directions.Left:
-                        sprite.Location = new Point(sprite.Location.X - speed, sprite.Location.Y);
-                        if (blockmap[Y, X - 1].Location == sprite.Location)
-                        {
-                            player.Move();
-                        }
-                        break;
-                    case Directions.Up:
-                        sprite.Location = new Point(sprite.Location.X, sprite.Location.Y - speed);
-                        if (blockmap[Y - 1, X].Location == sprite.Location)
-                        {
-                            player.Move();
-                        }
-                        break;
-                    case Directions.Down:
-                        sprite.Location = new Point(sprite.Location.X, sprite.Location.Y + speed);
-                        if (blockmap[Y + 1, X].Location == sprite.Location)
-                        {
-                            player.Move();
-                        }
-                        break;
+                    this.Controls.Remove(bombSprites[explodedBomb.Id].Item1);
+                    this.Controls.Remove(bombSprites[explodedBomb.Id].Item2);
+                    bombSprites.Remove(explodedBomb.Id);
                 }
+
+                foreach (var bomb in gameState.Bombs)
+                {
+                    bombSprites[bomb.Id].Item2.Text = ((int)bomb.Timer).ToString();
+                }
+
+                UpdateMap();
                 
+                var movingPlayers = gameState.GetMovingPlayers();
+                foreach (var player in movingPlayers)
+                {
+                    int speed = 5;
+                    int X = player.Position.X;
+                    int Y = player.Position.Y;
+
+                    var sprite = playerSprites[player.Id];
+
+                    switch (player.Direction)
+                    {
+                        case Directions.Right:
+                            sprite.Location = new Point(sprite.Location.X + speed, sprite.Location.Y);
+                            if (blockmap[Y, X + 1].Location == sprite.Location)
+                            {
+                                player.Move();
+                            }
+                            break;
+                        case Directions.Left:
+                            sprite.Location = new Point(sprite.Location.X - speed, sprite.Location.Y);
+                            if (blockmap[Y, X - 1].Location == sprite.Location)
+                            {
+                                player.Move();
+                            }
+                            break;
+                        case Directions.Up:
+                            sprite.Location = new Point(sprite.Location.X, sprite.Location.Y - speed);
+                            if (blockmap[Y - 1, X].Location == sprite.Location)
+                            {
+                                player.Move();
+                            }
+                            break;
+                        case Directions.Down:
+                            sprite.Location = new Point(sprite.Location.X, sprite.Location.Y + speed);
+                            if (blockmap[Y + 1, X].Location == sprite.Location)
+                            {
+                                player.Move();
+                            }
+                            break;
+                    }
+
+                }
             }
         }
         
@@ -207,27 +302,38 @@ namespace bomberman
             switch (e.KeyCode)
             {
                 case Keys.Right:
-                    SendMessageToServer("Right");
+                    SendMoveCommandToServer("Right");
                     break;
                 case Keys.Left:
-                    SendMessageToServer("Left");
+                    SendMoveCommandToServer("Left");
                     break;
                 case Keys.Down:
-                    SendMessageToServer("Down");
+                    SendMoveCommandToServer("Down");
                     break;
                 case Keys.Up:
-                    SendMessageToServer("Up");
+                    SendMoveCommandToServer("Up");
+                    break;
+                case Keys.Enter:
+                    SendBombCommandToServer();
                     break;
             }
         }
 
-        private void SendMessageToServer(string message)
+        private void SendMoveCommandToServer(string message)
         {
             if (ws != null && ws.ReadyState != WebSocketState.Closed)
             {
                 ws.Send(string.Format("Move {0} {1}", gameState.PlayerId, message));
             }
         }
+        private void SendBombCommandToServer()
+        {
+            if (ws != null && ws.ReadyState != WebSocketState.Closed)
+            {
+                ws.Send(string.Format("Bomb {0}", gameState.PlayerId));
+            }
+        }
+
         private void frm_menu_FormClosing(object sender, FormClosingEventArgs e)
         {
             System.Windows.Forms.Application.Exit();

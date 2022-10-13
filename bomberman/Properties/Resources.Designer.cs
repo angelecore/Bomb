@@ -63,6 +63,16 @@ namespace bomberman.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap bombSprite {
+            get {
+                object obj = ResourceManager.GetObject("bombSprite", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap character_positioned {
             get {
                 object obj = ResourceManager.GetObject("character_positioned", resourceCulture);
@@ -71,13 +81,13 @@ namespace bomberman.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to i i i i i i i
-        ///i v c c v v i
-        ///i v i v i v i
-        ///i c v c v v i
-        ///i v i v i v i
-        ///i c c c v v i
-        ///i i i i i i i.
+        ///   Looks up a localized string similar to #######
+        ///#1cc..#
+        ///#.#.#.#
+        ///#c.c..#
+        ///#.#.#.#
+        ///#ccc.2#
+        ///#######.
         /// </summary>
         internal static string Level1 {
             get {
