@@ -6,8 +6,18 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
+    public enum GameStatus
+    {
+        WaitingForPlayers,
+        InProgress,
+        Lost,
+        Tie,
+        Won
+    }
+
     internal class GameState
     {
+        private GameStatus CurrentGameStatus;
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
 
@@ -22,15 +32,19 @@ namespace bomberman.classes
 
         private List<Player> players = new List<Player>();
         public List<Bomb> Bombs = new List<Bomb>();
+        int maxPlayerCount;
 
-        public GameState(string playerName)
+        public GameState(string playerName, int maxPlayerCount = 2)
         {
             this.PlayerName = playerName;
+            CurrentGameStatus = GameStatus.WaitingForPlayers;
             LoadMap();
+            this.maxPlayerCount = maxPlayerCount;
         }
- 
+
         private void ExplodeBomb(Bomb bomb)
         {
+            Bombs.Remove(bomb);
             var directions = new List<Directions>() { Directions.Up, Directions.Down, Directions.Left, Directions.Right };
             for (int i = 0; i < bomb.Radius; i++)
             {
@@ -39,34 +53,81 @@ namespace bomberman.classes
                     var dir = directions[j];
                     var vector = Utils.MultiplyVector(Utils.GetDirectionVector(dir), i);
                     var newPos = Utils.AddVectors(bomb.Position, vector);
-                    if (!IsPositionValid(newPos))
+
+                    // If the position is not valid or the block is indestructable - stop
+                    if (!IsPositionValid(newPos) || Grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
                     {
                         directions.RemoveAt(j);
                         continue;
                     }
 
                     var cell = Grid[newPos.Y, newPos.X];
-                    if (cell.Type == BlockType.InDestructable)
+                    ExplosionIntensity[newPos.Y, newPos.X] = (bomb.Radius - i) * 5;
+
+                    // If another bomb is also is this direction, then also explode this bomb next tic.
+                    bool bombReached = false;
+                    foreach (var anotherBomb in Bombs)
                     {
-                        directions.RemoveAt(j);
-                        continue;
+                        if (anotherBomb.Position.Equals(cell.Position))
+                        {
+                            anotherBomb.Timer = 0;
+                            bombReached = true;
+                        }
                     }
 
-                    ExplosionIntensity[newPos.Y, newPos.X] = bomb.Radius - i;
-                    if (cell.Type == BlockType.Empty)
+                    foreach(var player in players)
                     {
-                        continue;
+                        if (player.Position.Equals(cell.Position))
+                        {
+                            player.IsAlive = false;
+                        }
                     }
-                   
-                    if (cell.Type == BlockType.Destructable)
+
+                    // Destroy this block and stop the explosion in this direction
+                    if (cell.Type == BlockType.Destructable || bombReached)
                     {
                         cell.Type = BlockType.Empty;
-                    }
-
-
-                    directions.RemoveAt(j);
+                        directions.RemoveAt(j);
+                    }  
                 }
             }
+        }
+
+        public GameStatus CheckGameStatus()
+        {
+            if (CurrentGameStatus == GameStatus.WaitingForPlayers)
+            {
+                if (players.Count == maxPlayerCount)
+                {
+                    CurrentGameStatus = GameStatus.InProgress;
+                }
+            }
+            else
+            {
+                if (players.Count == 0)
+                {
+                    CurrentGameStatus = GameStatus.Tie;
+                }
+
+                if (players.Count == 1)
+                {
+                    CurrentGameStatus = players.First().Id == PlayerId ? GameStatus.Won : GameStatus.Lost;
+                }
+            }
+
+            return CurrentGameStatus;
+        }
+       
+        public void RemovePlayer(string playerId)
+        {
+            players.RemoveAll(p => p.Id == playerId);
+        }
+
+        public List<Player> GetKilledPlayers()
+        {
+            return players
+                .Where(p => !p.IsAlive)
+                .ToList();
         }
 
         public List<Bomb> UpdateBombTimers(double miliSeconds)
@@ -81,7 +142,6 @@ namespace bomberman.classes
                 {
                     // boom
                     ExplodeBomb(bomb);
-                    Bombs.RemoveAt(i);
                     explodedBombs.Add(bomb);
                 }
             }

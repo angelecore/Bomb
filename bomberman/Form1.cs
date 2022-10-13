@@ -16,6 +16,8 @@ namespace bomberman
         // key is the bomb id
         private Dictionary<string, Tuple<PictureBox, Label>> bombSprites = new Dictionary<string, Tuple<PictureBox, Label>>();
 
+        private Label TopLabel;
+
         private Dictionary<BlockType, Color> BlockColors = new Dictionary<BlockType, Color>() 
         {
             { BlockType.Empty, Color.LightGray },
@@ -66,7 +68,7 @@ namespace bomberman
                     if (gameState.ExplosionIntensity[y, x] > 0)
                     {
                         gameState.ExplosionIntensity[y, x]--;
-                        block.BackColor = Color.FromArgb(60 * gameState.ExplosionIntensity[y, x], 255, 192, 0);
+                        block.BackColor = Color.FromArgb(12 * gameState.ExplosionIntensity[y, x], 255, 192, 0);
                     }
                 }
             }
@@ -121,10 +123,18 @@ namespace bomberman
                     HandlePlayerJoined(value);
                     break;
                 case "Move":
+                    if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+                    {
+                        return;
+                    }
                     var split = value.Split(" ");
                     gameState.PerformAction(split[0], split[1]);
                     break;
                 case "Bomb":
+                    if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+                    {
+                        return;
+                    }
                     HandleBombPlacement(value);
                     break;
             }
@@ -200,20 +210,82 @@ namespace bomberman
 
         }
 
+
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
             stopwatch.Stop();
 
+            if(gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+            {
+                if (TopLabel == null)
+                {
+                    TopLabel = new Label();
+                    TopLabel.Size = new Size(300, 40);
+                    TopLabel.Font = new Font("Calibri", 24);
+                    TopLabel.Location = new Point(0, 0);   
+                    this.Controls.Add(TopLabel);
+                    TopLabel.Text = "Waiting for players...";
+                    TopLabel.BringToFront();
+                }
+                return;
+            } 
+            else
+            {
+                this.Controls.Remove(TopLabel);
+                TopLabel = null;
+            }
             // Update bomb timer labels and remove exploded bombs
             UpdateBombs();
             // Update information on the map based on the new state
             UpdateMap();
+
+            // Remove dead players
+            RemoveDeadPlayers(gameState.GetKilledPlayers());
+
             // Move player sprites, whose state is not idle
             MoveAnimations();
+
+            // Check if final game state has been reached
+            var gameStatus = gameState.CheckGameStatus();
+
+            // End the game
+            if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))
+            {
+                this.Hide();
+                // Open final form
+                string text = "";
+                if (gameStatus == GameStatus.Won)
+                {
+                    text = String.Format("Congratulations {0}, You have Won!", gameState.PlayerName);
+                } 
+                else if (gameStatus == GameStatus.Lost)
+                {
+                    text = "You have lost...";
+                } 
+                else
+                {
+                    text = "It's a tie";
+                }
+
+                EndGameForm form = new EndGameForm(text);
+                form.Show();
+            }
 
             stopwatch.Restart();
         }
         
+        private void RemoveDeadPlayers(List<Player> deadPlayers)
+        {
+            foreach(var player in deadPlayers)
+            {
+                this.Controls.Remove(playerSprites[player.Id]);
+                playerSprites.Remove(player.Id);
+
+                // Now we can delete this player from the game
+                gameState.RemovePlayer(player.Id);
+            }
+        }
+
         private void UpdateBombs()
         {
             TimeSpan ts = stopwatch.Elapsed;

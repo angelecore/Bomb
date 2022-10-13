@@ -33,7 +33,6 @@ namespace bomberman
 
             foreach (var form in forms)
             {
-                /*
                 form.FormClosed += (s, args) =>
                 {
                     //When we have closed the last of the "starting" forms, 
@@ -41,7 +40,6 @@ namespace bomberman
                     if (Interlocked.Decrement(ref openForms) == 0)
                         ExitThread();
                 };
-                */
 
                 form.Show();
             }

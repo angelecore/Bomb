@@ -16,7 +16,7 @@ namespace bomberman.classes
         public Bomb(Vector2f position)
         {
             Position = position;
-            Timer = 5.0f;
+            Timer = 8.0f;
             Id = Guid.NewGuid().ToString();
             Radius = 4;
         }
