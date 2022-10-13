@@ -28,7 +28,6 @@ namespace bomberman.classes
             this.PlayerName = playerName;
             LoadMap();
         }
-
  
         private void ExplodeBomb(Bomb bomb)
         {
@@ -192,8 +191,7 @@ namespace bomberman.classes
                 player.Move();
             }
 
-            player.SetDirection(newDirection);
-            
+            player.SetDirection(newDirection);    
         }
 
         public bool IsPositionValid(Vector2f pos)
@@ -211,7 +209,6 @@ namespace bomberman.classes
             var maplayout = Properties.Resources.Level1;
 
             Height = maplayout.Split("\r\n").Length;
-
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
             {
@@ -241,6 +238,7 @@ namespace bomberman.classes
                                 type = BlockType.Destructable;
                                 break;
                             case '.':
+                                type = BlockType.Empty;
                                 break;
                             default:
                                 possiblePlayerPos.Add(new Vector2f(currentCollum, currentRow));
