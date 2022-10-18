@@ -1,3 +1,4 @@
-﻿i = indestructible blocks
+﻿# = indestructible blocks (wall)
 c = destructable blocs
-v = empty spaces
+. = empty spaces
+Numbers = where players can join in written order
