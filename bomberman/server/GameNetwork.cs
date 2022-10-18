@@ -11,6 +11,7 @@ namespace bomberman.server
     {
         WebSocketServer server = new WebSocketServer("ws://127.0.0.1:7980");
         private Dictionary<string, User> Users;
+        private List<string> Events;
 
         public GameNetwork()
         {
@@ -18,6 +19,7 @@ namespace bomberman.server
             server.AddWebSocketService("/Server", () => new GameServer(this));
 
             Users = new Dictionary<string, User>();
+            Events = new List<string>();
         }
 
         public Dictionary<string, User> GetAllUsers()
@@ -28,6 +30,16 @@ namespace bomberman.server
         public void AddNewUser(string socketId, string name)
         {
             Users.Add(socketId, new User(socketId, name));
+        }
+
+        public void AddNewEvent(string userEvent) 
+        {
+            Events.Add(userEvent);
+        }
+
+        public List<string> GetAllEvents()
+        {
+            return Events;
         }
 
         public void Run()

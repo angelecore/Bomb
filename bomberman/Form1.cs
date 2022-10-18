@@ -1,5 +1,6 @@
 using bomberman.classes;
 using bomberman.client;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using WebSocketSharp;
 
@@ -138,9 +139,31 @@ namespace bomberman
                     }
                     HandleBombPlacement(value);
                     break;
+                case "Logs":
+                    var logs = JsonConvert.DeserializeObject<List<string>>(value);
+                    HandleLogs(logs);
+                    break;
             }
         }
        
+        private void HandleLogs(List<string> logs)
+        {
+            using (FileStream fs = File.Create(
+                string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName)
+                )
+            )
+            {                  
+                using (var fw = new StreamWriter(fs))
+                {
+                    foreach (var log in logs)
+                    {
+                        fw.WriteLine(log);
+                        fw.Flush();
+                    }
+                }
+            }
+        }
+
         private void HandleBombPlacement(string id)
         {
             var bomb = gameState.PlaceBomb(id);
@@ -229,6 +252,7 @@ namespace bomberman
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))
             {
+                SendEndGameToServer();
                 // Open final form
                 string text;
                 if (gameStatus == GameStatus.Won)
@@ -338,6 +362,14 @@ namespace bomberman
                 case Keys.Space:
                     SendBombCommandToServer();
                     break;
+            }
+        }
+
+        private void SendEndGameToServer()
+        {
+            if (ws != null && ws.ReadyState != WebSocketState.Closed)
+            {
+                ws.Send("Endgame");
             }
         }
 

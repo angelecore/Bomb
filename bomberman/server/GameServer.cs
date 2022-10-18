@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,15 @@ namespace bomberman.server
 
         protected override void OnMessage(MessageEventArgs e)
         {
+            // send logs
+            if (e.Data.Contains("Endgame"))
+            {
+                Send(String.Format("Logs {0}", JsonConvert.SerializeObject(_gameNetwork.GetAllEvents())));
+                return;
+            }
+
+            _gameNetwork.AddNewEvent(e.Data);
+
             if (e.Data.Contains("Connected"))
             {
                 string userName = e.Data.Split(' ')[1];
