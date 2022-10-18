@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace bomberman.client
 {
-    internal class BombModel
+    internal class BombModel : IModel
     {
         public Point Position { get; set; }
-
         public Image BombSprite { get; set; }
         public PictureBox BombPictureBox { get; set; }
         public Label TimerLabel { get; set; }

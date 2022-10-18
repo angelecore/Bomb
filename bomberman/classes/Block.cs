@@ -7,7 +7,7 @@
         Empty
     }
 
-    internal class Block
+    public class Block
     {
         public Vector2f Position;
         public BlockType Type { get; set; }

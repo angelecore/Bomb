@@ -15,7 +15,7 @@ namespace bomberman.classes
         Won
     }
 
-    internal class GameState
+    public class GameState
     {
         private GameStatus CurrentGameStatus;
         public string PlayerName { get; set; }
@@ -32,6 +32,9 @@ namespace bomberman.classes
 
         private List<Player> players = new List<Player>();
         public List<Bomb> Bombs = new List<Bomb>();
+
+        // key is the index of the Grid tile
+        public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         int maxPlayerCount;
 
         public GameState(string playerName, int maxPlayerCount = 2)
@@ -40,6 +43,11 @@ namespace bomberman.classes
             CurrentGameStatus = GameStatus.WaitingForPlayers;
             LoadMap();
             this.maxPlayerCount = maxPlayerCount;
+        }
+
+        public int GetGridIndex(Vector2f position)
+        {
+            return position.Y * Width + position.X;
         }
 
         private void ExplodeBomb(Bomb bomb)
@@ -88,6 +96,15 @@ namespace bomberman.classes
                     {
                         cell.Type = BlockType.Empty;
                         directions.RemoveAt(j);
+                        bomb.Owner.Score++;
+
+                        // add-on powerup logic!
+
+                        // Every third crate is a power up
+                        if (bomb.Owner.Score % 3 == 0)
+                        {
+                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
+                        }
                     }  
                 }
             }
@@ -186,7 +203,7 @@ namespace bomberman.classes
 
             // Can't place a bomb while still moving
             if (player.Direction != Directions.Idle) return null;
-            var bomb = new Bomb(player.Position);
+            var bomb = new Bomb(player.Position, player, player.BombExplosionRadius);
             Bombs.Add(bomb);
 
             return bomb;
@@ -248,10 +265,22 @@ namespace bomberman.classes
             // if the player was already moving, then update its position
             if (player.Direction != Directions.Idle && player.Direction != newDirection)
             {
-                player.Move();
+                MovePlayer(player);
             }
 
             player.SetDirection(newDirection);    
+        }
+
+        public void MovePlayer(Player player)
+        {
+            player.Move();
+
+            int gridIndex = GetGridIndex(player.Position);
+            if (Powerups.ContainsKey(gridIndex))
+            {
+                Powerups[gridIndex].ApplyPowerUp(this, player);
+                Powerups.Remove(gridIndex);
+            }
         }
 
         public bool IsPositionValid(Vector2f pos)

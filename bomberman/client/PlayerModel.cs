@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.client
 {
-    internal class PlayerModel
+    internal class PlayerModel : IModel
     {
         public string Name { get; set; }
 

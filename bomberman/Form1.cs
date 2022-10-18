@@ -17,6 +17,9 @@ namespace bomberman
         // key is the bomb id
         private Dictionary<string, BombModel> bombSprites = new Dictionary<string, BombModel>();
 
+        // key is the powerup grid index
+        private Dictionary<int, PowerupModel> powerupSprites = new Dictionary<int, PowerupModel>();
+
         private Label TopLabel;
 
         private Dictionary<BlockType, Color> BlockColors = new Dictionary<BlockType, Color>() 
@@ -27,6 +30,7 @@ namespace bomberman
         };
 
         GameState gameState;
+
         private Stopwatch stopwatch = new Stopwatch();
         public Form1(string name)
         {
@@ -71,6 +75,21 @@ namespace bomberman
                         gameState.ExplosionIntensity[y, x]--;
                         block.BackColor = Color.FromArgb(12 * gameState.ExplosionIntensity[y, x], 255, 192, 0);
                     }
+
+                    int gridIndex = gameState.GetGridIndex(cell.Position);
+                    // add or delete power ups
+                    if (gameState.Powerups.ContainsKey(gridIndex)) {
+                        // If it doesn't exist - Create it
+                        if (!powerupSprites.ContainsKey(gridIndex))
+                        {
+                            CreatePowerupModel(cell.Position, gameState.Powerups[gridIndex]);
+                        }
+                    } else if (powerupSprites.ContainsKey(gridIndex))
+                    {
+                        // delete this power up from the UI
+                        RemoveControlsRange(powerupSprites[gridIndex].GetControls());
+                        powerupSprites.Remove(gridIndex);
+                    }
                 }
             }
         }
@@ -99,6 +118,27 @@ namespace bomberman
                     }
                 }
             }
+        }
+
+        public void BringPlayerSpritesToFront()
+        {
+            foreach(var player in playerSprites)
+            {
+                player.Value.BringToFront();
+            }
+        }
+
+        public void CreatePowerupModel(Vector2f position, IPowerup powerup)
+        {
+            var powerupModel = new PowerupModel(
+                new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
+                Properties.Resources.bombRadiusPowerup
+            );
+            this.Controls.AddRange(powerupModel.GetControls());
+
+            powerupModel.BringToFront();
+            BringPlayerSpritesToFront();
+            powerupSprites[gameState.GetGridIndex(position)] = powerupModel;
         }
 
         public bool ControlInvokeRequired(Control c, Action a)
@@ -332,7 +372,7 @@ namespace bomberman
 
                 if (blockmap[nextPlayerPos.Y, nextPlayerPos.X].Location == playerModel.Position)
                 {
-                    player.Move();
+                    gameState.MovePlayer(player);
                 }
             }
 
