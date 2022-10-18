@@ -1,4 +1,5 @@
 using bomberman.classes;
+using bomberman.client;
 using System.Diagnostics;
 using WebSocketSharp;
 
@@ -8,13 +9,12 @@ namespace bomberman
     {
         private WebSocket? ws;
 
-        const int blocksize = 50;
         private Button[,] blockmap;
 
         // key is the player id
-        private Dictionary<string, PictureBox> playerSprites = new Dictionary<string, PictureBox>();
+        private Dictionary<string, PlayerModel> playerSprites = new Dictionary<string, PlayerModel>();
         // key is the bomb id
-        private Dictionary<string, Tuple<PictureBox, Label>> bombSprites = new Dictionary<string, Tuple<PictureBox, Label>>();
+        private Dictionary<string, BombModel> bombSprites = new Dictionary<string, BombModel>();
 
         private Label TopLabel;
 
@@ -35,7 +35,7 @@ namespace bomberman
 
             CreateMap();
 
-            this.ws = new WebSocket("ws://127.0.0.1:7980/Laputa");
+            this.ws = new WebSocket("ws://127.0.0.1:7980/Server");
             this.MovementTimer.Enabled = true;
 
             // Handle socket messages
@@ -51,7 +51,7 @@ namespace bomberman
             ws.Connect();
 
             // Inform other users that you have connected
-            ws.Send(string.Format("Connected"));
+            ws.Send(string.Format("Connected {0}", name));
         }
 
         public void UpdateMap()
@@ -88,9 +88,9 @@ namespace bomberman
                         var block = gameState.Grid[y, x];
 
                         Button button = new Button();
-                        button.Size = new Size(blocksize, blocksize);
+                        button.Size = new Size(Constants.BLOCK_SIZE, Constants.BLOCK_SIZE);
                         button.BackColor = BlockColors[block.Type];
-                        button.Location = new Point(x * blocksize, y * blocksize);
+                        button.Location = new Point(x * Constants.BLOCK_SIZE, y * Constants.BLOCK_SIZE);
 
                         this.Controls.Add(button);
 
@@ -120,15 +120,16 @@ namespace bomberman
                     HandlePlayerConnected(value);
                     break;
                 case "Joined":
-                    HandlePlayerJoined(value);
+                    var split1 = value.Split(" ");
+                    HandlePlayerJoined(split1[0], split1[1]);
                     break;
                 case "Move":
                     if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
                     {
                         return;
                     }
-                    var split = value.Split(" ");
-                    gameState.PerformAction(split[0], split[1]);
+                    var split2 = value.Split(" ");
+                    gameState.PerformAction(split2[0], split2[1]);
                     break;
                 case "Bomb":
                     if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
@@ -144,65 +145,42 @@ namespace bomberman
         {
             var bomb = gameState.PlaceBomb(id);
             if (bomb == null) return;
+            bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), Properties.Resources.bombSprite);
 
-            PictureBox bombImg = new PictureBox();
-            bombImg.Image = Properties.Resources.bombSprite;
-            bombImg.Size = new Size(blocksize, blocksize);
-            bombImg.SizeMode = PictureBoxSizeMode.Zoom;
-            bombImg.BackColor = Color.Transparent;
-            bombImg.Location = new Point(bomb.Position.X * blocksize, bomb.Position.Y * blocksize);
-            this.Controls.Add(bombImg);
-            bombImg.BringToFront();
-
-
-            Label timer = new Label();
-            timer.Location = bombImg.Location;
-            timer.Size = new Size(15, 15);
-            timer.Text = ((int)bomb.Timer).ToString(); 
-            timer.Parent = bombImg;
-            timer.BackColor = Color.Transparent;
-
-            this.Controls.Add(timer);
-            timer.BringToFront();
-            bombSprites[bomb.Id] = new Tuple<PictureBox, Label>(bombImg, timer);
+            this.Controls.AddRange(bombSprites[bomb.Id].GetControls());
+            bombSprites[bomb.Id].BringToFront();
             playerSprites[id].BringToFront();
         }
 
-        private void HandlePlayerJoined(string id)
+        private void HandlePlayerJoined(string id, string userName)
         {
-            var pos = gameState.AddEnemy(id);
+            var pos = gameState.AddEnemy(id, userName);
             if (pos == null)
             {
                 return;
             }
 
-            Console.WriteLine("New player Joined => Session owner: {0} | Joiner id: {1}", gameState.PlayerName, id);
-            CreatePlayerSprite(id, pos);
+            Console.WriteLine("{0}: New player {1} joined with id {2}", gameState.PlayerName, userName, id);
+            CreatePlayerSprite(id, userName, pos);
         }
 
         private void HandlePlayerConnected(string id)
         {
-            Console.WriteLine("Owner connected => Name: {0} | Id: {1}", gameState.PlayerName, id);
+            Console.WriteLine("{0}: connected with id: {1}", gameState.PlayerName, id);
 
             var pos = gameState.AddOwner(id);
-            CreatePlayerSprite(id, pos);
+            CreatePlayerSprite(id, gameState.PlayerName, pos);
         }
 
-        private void CreatePlayerSprite(string playerId, Vector2f position)
+        private void CreatePlayerSprite(string playerId, string playerName, Vector2f position)
         {
-            PictureBox PlayerImg = new PictureBox();
-
-            PlayerImg.Image = Properties.Resources.character_positioned;
-
-            PlayerImg.Size = new Size(blocksize, blocksize);
-            PlayerImg.Parent = blockmap[1, 1];
-            PlayerImg.SizeMode = PictureBoxSizeMode.Zoom;
-            PlayerImg.BackColor = Color.Transparent;
-            PlayerImg.Location = new Point(position.X * blocksize, position.Y * blocksize);
-            this.Controls.Add(PlayerImg);
-            PlayerImg.BringToFront();
-
-            playerSprites[playerId] = PlayerImg;
+            playerSprites[playerId] = new PlayerModel(
+                playerName,
+                new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
+                Properties.Resources.character_positioned
+            );
+            this.Controls.AddRange(playerSprites[playerId].GetControls());
+            playerSprites[playerId].BringToFront();
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -251,9 +229,8 @@ namespace bomberman
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))
             {
-                this.Hide();
                 // Open final form
-                string text = "";
+                string text;
                 if (gameStatus == GameStatus.Won)
                 {
                     text = String.Format("Congratulations {0}, You have Won!", gameState.PlayerName);
@@ -267,18 +244,26 @@ namespace bomberman
                     text = "It's a tie";
                 }
 
-                EndGameForm form = new EndGameForm(text);
-                form.Show();
+                Utils.NewFormOnTop(this, new EndGameForm(text));
             }
 
             stopwatch.Restart();
         }
         
+        private void RemoveControlsRange(Control[] controls)
+        {
+            foreach (var control in controls)
+            {
+                this.Controls.Remove(control);
+            }
+        }
+
         private void RemoveDeadPlayers(List<Player> deadPlayers)
         {
             foreach(var player in deadPlayers)
             {
-                this.Controls.Remove(playerSprites[player.Id]);
+                RemoveControlsRange(playerSprites[player.Id].GetControls());
+
                 playerSprites.Remove(player.Id);
 
                 // Now we can delete this player from the game
@@ -293,15 +278,14 @@ namespace bomberman
             var explodedBombs = gameState.UpdateBombTimers(ts.TotalMilliseconds);
             foreach (var explodedBomb in explodedBombs)
             {
-                this.Controls.Remove(bombSprites[explodedBomb.Id].Item1);
-                this.Controls.Remove(bombSprites[explodedBomb.Id].Item2);
+                RemoveControlsRange(bombSprites[explodedBomb.Id].GetControls());
                 bombSprites.Remove(explodedBomb.Id);
             }
 
             // Update timer labels
             foreach (var bomb in gameState.Bombs)
             {
-                bombSprites[bomb.Id].Item2.Text = ((int)bomb.Timer).ToString();
+                bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
             }
         }
 
@@ -311,18 +295,18 @@ namespace bomberman
             foreach (var player in movingPlayers)
             {
                 int speed = 5;
-                var sprite = playerSprites[player.Id];
+                var playerModel = playerSprites[player.Id];
 
                 var dirVector = Utils.GetDirectionVector(player.Direction);
                 var nextSpritePos = Utils.AddVectors(
-                    new Vector2f(sprite.Location.X, sprite.Location.Y),
+                    new Vector2f(playerModel.Position.X, playerModel.Position.Y),
                     Utils.MultiplyVector(dirVector, speed)
                 );
                 var nextPlayerPos = Utils.AddVectors(player.Position, dirVector);
 
-                sprite.Location = new Point(nextSpritePos.X, nextSpritePos.Y);
+                playerModel.UpdatePosition(new Point(nextSpritePos.X, nextSpritePos.Y));
 
-                if (blockmap[nextPlayerPos.Y, nextPlayerPos.X].Location == sprite.Location)
+                if (blockmap[nextPlayerPos.Y, nextPlayerPos.X].Location == playerModel.Position)
                 {
                     player.Move();
                 }

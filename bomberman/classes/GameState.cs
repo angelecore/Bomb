@@ -153,11 +153,11 @@ namespace bomberman.classes
             this.PlayerId = id;
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, pos));
+            players.Add(new Player(id, PlayerName, pos));
             return pos;
         }
 
-        public Vector2f? AddEnemy(string id)
+        public Vector2f? AddEnemy(string id, string name)
         {
             // Hacky, but this is the owner id and it cannot join twice.
             // TODO: fix this somehow in the future :))))
@@ -167,7 +167,7 @@ namespace bomberman.classes
             }
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, pos));
+            players.Add(new Player(id, name, pos));
 
             return pos;
         }

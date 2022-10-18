@@ -1,11 +1,15 @@
-﻿using WebSocketSharp;
+﻿using bomberman.classes;
+using WebSocketSharp;
 
 namespace bomberman
 {
     public partial class Form2 : Form
     {
-        public Form2()
+        public Form2(int leftOffset, int topOffset)
         {
+            this.StartPosition = FormStartPosition.Manual;
+            this.Left = leftOffset;
+            this.Top = topOffset;
             InitializeComponent();
         }
 
@@ -36,9 +40,7 @@ namespace bomberman
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.Hide();
-            Form1 form = new Form1(textBox1.Text);
-            form.Show();
+            Utils.NewFormOnTop(this, new Form1(textBox1.Text));
         }
 
         private static void Ws_OnMessage(object sender, MessageEventArgs e)

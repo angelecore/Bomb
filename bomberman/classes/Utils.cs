@@ -8,6 +8,15 @@ namespace bomberman.classes
 {
     static class Utils
     {
+        public static void NewFormOnTop(Form window, Form newForm)
+        {
+            window.Hide();
+            newForm.Tag = window;
+            newForm.StartPosition = FormStartPosition.Manual;
+            newForm.Location = window.Location;
+            newForm.Show(window);
+        }
+
         public static Vector2f AddVectors(Vector2f a, Vector2f b)
         {
             return new Vector2f(a.X + b.X, a.Y + b.Y);
