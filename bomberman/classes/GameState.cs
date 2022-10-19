@@ -35,6 +35,7 @@ namespace bomberman.classes
 
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
+        public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
         int maxPlayerCount;
 
         public GameState(string playerName, int maxPlayerCount = 2)
@@ -99,7 +100,12 @@ namespace bomberman.classes
                         bomb.Owner.Score++;
 
                         // add-on powerup logic!
-
+                        // Every Sixth crate is a bomb change
+                        if (bomb.Owner.Score % 6 == 0)
+                        {
+                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Dynamite));
+                            continue;
+                        }
                         // Every third crate is a power up
                         if (bomb.Owner.Score % 3 == 0)
                         {
@@ -108,6 +114,78 @@ namespace bomberman.classes
                     }  
                 }
             }
+        }
+
+        private void ExplodeDynamite(Bomb bomb)
+        {
+            var temp = GetExplosionCoordinates(bomb, bomb.Radius);
+            Bombs.Remove(bomb);
+                foreach (Vector2f coordinate in temp)
+                {
+                    
+                    // If the position is not valid or the block is indestructable - stop
+                    if (!IsPositionValid(coordinate) || Grid[coordinate.Y, coordinate.X].Type == BlockType.InDestructable)
+                    {
+                        continue;
+                    }
+
+                    var cell = Grid[coordinate.Y, coordinate.X];
+                    ExplosionIntensity[coordinate.Y, coordinate.X] = (bomb.Radius) * 2;
+
+                    // If another bomb is also is this direction, then also explode this bomb next tic.
+                    bool bombReached = false;
+                    foreach (var anotherBomb in Bombs)
+                    {
+                        if (anotherBomb.Position.Equals(cell.Position))
+                        {
+                            anotherBomb.Timer = 0;
+                            bombReached = true;
+                        }
+                    }
+
+                    foreach(var player in players)
+                    {
+                        if (player.Position.Equals(cell.Position))
+                        {
+                            player.IsAlive = false;
+                        }
+                    }
+
+                    // Destroy this block and stop the explosion in this direction
+                    if (cell.Type == BlockType.Destructable || bombReached)
+                    {
+                        cell.Type = BlockType.Empty;
+                        bomb.Owner.Score++;
+
+                        // add-on powerup logic!
+                        if(bomb.Owner.Score  % 6 == 0)
+                        {
+                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Basic));
+                            continue;
+                        }
+                        // Every third crate is a power up
+                        if (bomb.Owner.Score % 3 == 0)
+                        {
+                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
+                        }
+                    }  
+            }
+        }
+
+        private List<Vector2f> GetExplosionCoordinates(Bomb bomb, int radius)
+        {
+            var Coordinates = new List<Vector2f>();
+            var start = bomb.Position;
+            var range = radius / 2;
+            List<int> collums = new List<int>();
+            for (int i = -range; i <= range ; i++)
+            {
+                for (int j = -range; j <= range ; j++)
+                {
+                    Coordinates.Add(new Vector2f(start.X + i, start.Y + j));
+                }
+            }
+            return Coordinates;
         }
 
         public GameStatus CheckGameStatus()
@@ -158,7 +236,12 @@ namespace bomberman.classes
                 if (bomb.Timer < 1)
                 {
                     // boom
+                    // if the bomb is basic it explodes in 4 directions
+                    if(bomb.Owner.BombType == BombType.Basic)
                     ExplodeBomb(bomb);
+                    // if the bomb is Dynamite it exlodes in a squere formation
+                    else
+                    ExplodeDynamite(bomb);
                     explodedBombs.Add(bomb);
                 }
             }
@@ -280,6 +363,11 @@ namespace bomberman.classes
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
                 Powerups.Remove(gridIndex);
+            }
+            if (Bombtypes.ContainsKey(gridIndex))
+            {
+                Bombtypes[gridIndex].ChangeBombType(player);
+                Bombtypes.Remove(gridIndex);
             }
         }
 

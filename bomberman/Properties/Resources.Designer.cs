@@ -91,6 +91,16 @@ namespace bomberman.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap dynamite {
+            get {
+                object obj = ResourceManager.GetObject("dynamite", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to #############
         ///#1.c.cc..c..#
         ///#.#c#.#.#.#.#
@@ -98,7 +108,7 @@ namespace bomberman.Properties {
         ///#c#c#c#.#.#.#
         ///#..c...c....#
         ///#.#c#c#.#.#.#
-        ///#c.c...c..cc#
+        ///#c.c...c..c.#
         ///#.#c#.#.#c#.#
         ///#.cc.cc.cc.2#
         ///#############.
