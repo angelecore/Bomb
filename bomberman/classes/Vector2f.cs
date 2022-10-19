@@ -23,5 +23,10 @@ namespace bomberman.classes
             Vector2f other = (Vector2f)obj;
             return X == other.X && Y == other.Y;
         }
+
+        public override string ToString()
+        {
+            return String.Format("({0};{1})", X, Y);
+        }
     }
 }

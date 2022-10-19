@@ -51,6 +51,37 @@ namespace bomberman.classes
             return position.Y * Width + position.X;
         }
 
+        private void RemoveBox(Player responsiblePlayer, Vector2f position)
+        {
+            var cell = Grid[position.Y, position.X];
+            cell.Type = BlockType.Empty;
+            responsiblePlayer.Score++;
+
+            int gridIndex = GetGridIndex(position);
+
+            // add-on powerup logic!
+            // Every Sixth crate is a bomb change
+            if (responsiblePlayer.Score % 6 == 0)
+            {
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
+                return;
+            }
+
+            // add-on powerup logic!
+            // Every 5th crate is a speed power up
+            if (responsiblePlayer.Score % 5 == 0)
+            {
+                Powerups.Add(gridIndex, new SpeedPowerupStrategy());
+                return;
+            }
+
+            // Every third crate is a power up
+            if (responsiblePlayer.Score % 3 == 0)
+            {
+                Powerups.Add(gridIndex, new AddBombRadiusStrategy());
+            }
+        }
+
         private void ExplodeBomb(Bomb bomb)
         {
             Bombs.Remove(bomb);
@@ -95,22 +126,8 @@ namespace bomberman.classes
                     // Destroy this block and stop the explosion in this direction
                     if (cell.Type == BlockType.Destructable || bombReached)
                     {
-                        cell.Type = BlockType.Empty;
                         directions.RemoveAt(j);
-                        bomb.Owner.Score++;
-
-                        // add-on powerup logic!
-                        // Every Sixth crate is a bomb change
-                        if (bomb.Owner.Score % 6 == 0)
-                        {
-                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Dynamite));
-                            continue;
-                        }
-                        // Every third crate is a power up
-                        if (bomb.Owner.Score % 3 == 0)
-                        {
-                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
-                        }
+                        RemoveBox(bomb.Owner, cell.Position);
                     }  
                 }
             }
@@ -155,19 +172,7 @@ namespace bomberman.classes
                     if (cell.Type == BlockType.Destructable || bombReached)
                     {
                         cell.Type = BlockType.Empty;
-                        bomb.Owner.Score++;
-
-                        // add-on powerup logic!
-                        if(bomb.Owner.Score  % 6 == 0)
-                        {
-                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Basic));
-                            continue;
-                        }
-                        // Every third crate is a power up
-                        if (bomb.Owner.Score % 3 == 0)
-                        {
-                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
-                        }
+                        RemoveBox(bomb.Owner, cell.Position);
                     }  
             }
         }
@@ -225,7 +230,15 @@ namespace bomberman.classes
                 .ToList();
         }
 
-        public List<Bomb> UpdateBombTimers(double miliSeconds)
+        public void UpdateTick(float miliSeconds)
+        {
+            foreach(var player in players)
+            {
+                player.UpdateTemporaryStats(miliSeconds);
+            }
+        }
+
+        public List<Bomb> UpdateBombTimers(float miliSeconds)
         {
             var explodedBombs = new List<Bomb>();
             for(int i = Bombs.Count - 1; i >= 0; i--)
@@ -272,6 +285,11 @@ namespace bomberman.classes
             return pos;
         }
 
+        public Player? GetOwnerPlayer()
+        {
+            return players.SingleOrDefault(p => p.Id == PlayerId);
+        }
+
         public List<Player> GetMovingPlayers()
         {
             return players
@@ -286,6 +304,16 @@ namespace bomberman.classes
 
             // Can't place a bomb while still moving
             if (player.Direction != Directions.Idle) return null;
+
+            // can't place two bombs at the same spot
+            foreach(var otherBomb in Bombs)
+            {
+                if (otherBomb.Position.Equals(player.Position))
+                {
+                    return null;
+                }
+            }
+
             var bomb = new Bomb(player.Position, player, player.BombExplosionRadius);
             Bombs.Add(bomb);
 
