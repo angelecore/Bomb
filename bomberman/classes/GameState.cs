@@ -35,6 +35,7 @@ namespace bomberman.classes
 
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
+        public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
         int maxPlayerCount;
 
         public GameState(string playerName, int maxPlayerCount = 2)
@@ -99,7 +100,12 @@ namespace bomberman.classes
                         bomb.Owner.Score++;
 
                         // add-on powerup logic!
-
+                        // Every Sixth crate is a bomb change
+                        if (bomb.Owner.Score % 6 == 0)
+                        {
+                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Dynamite));
+                            continue;
+                        }
                         // Every third crate is a power up
                         if (bomb.Owner.Score % 3 == 0)
                         {
@@ -152,7 +158,11 @@ namespace bomberman.classes
                         bomb.Owner.Score++;
 
                         // add-on powerup logic!
-
+                        if(bomb.Owner.Score  % 6 == 0)
+                        {
+                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Basic));
+                            continue;
+                        }
                         // Every third crate is a power up
                         if (bomb.Owner.Score % 3 == 0)
                         {
@@ -226,7 +236,12 @@ namespace bomberman.classes
                 if (bomb.Timer < 1)
                 {
                     // boom
+                    // if the bomb is basic it explodes in 4 directions
+                    if(bomb.Owner.BombType == BombType.Basic)
                     ExplodeBomb(bomb);
+                    // if the bomb is Dynamite it exlodes in a squere formation
+                    else
+                    ExplodeDynamite(bomb);
                     explodedBombs.Add(bomb);
                 }
             }
@@ -348,6 +363,11 @@ namespace bomberman.classes
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
                 Powerups.Remove(gridIndex);
+            }
+            if (Bombtypes.ContainsKey(gridIndex))
+            {
+                Bombtypes[gridIndex].ChangeBombType(player);
+                Bombtypes.Remove(gridIndex);
             }
         }
 

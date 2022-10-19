@@ -9,6 +9,12 @@
         Idle,
     }
 
+    public enum BombType
+    {
+        Basic,
+        Dynamite,
+    }
+
     public class Player
     {
         public string Id { get; set; }
@@ -17,8 +23,8 @@
         public Directions Direction { get; set; }
         public bool IsAlive { get; set; }
         public int BombExplosionRadius { get; set; }
-
         public int Score { get; set; }
+        public BombType BombType { get; set; }
         public Player(string id, string name, Vector2f position)
         {
             this.Id = id;
@@ -28,6 +34,7 @@
             this.IsAlive = true;
             this.BombExplosionRadius = 2;
             this.Score = 0;
+            this.BombType = BombType.Basic;
         }
 
         public void Move()

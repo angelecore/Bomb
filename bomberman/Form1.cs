@@ -19,6 +19,7 @@ namespace bomberman
 
         // key is the powerup grid index
         private Dictionary<int, PowerupModel> powerupSprites = new Dictionary<int, PowerupModel>();
+        private Dictionary<int, PowerupModel> BombTypeChangeSprites = new Dictionary<int, PowerupModel>();
 
         private Label TopLabel;
 
@@ -84,7 +85,17 @@ namespace bomberman
                         {
                             CreatePowerupModel(cell.Position, gameState.Powerups[gridIndex]);
                         }
-                    } else if (powerupSprites.ContainsKey(gridIndex))
+                    } 
+                    // add or delete BombChange
+                    else if (gameState.Bombtypes.ContainsKey(gridIndex))
+                    {
+                        // If it doesn't exist - Create it
+                        if (!powerupSprites.ContainsKey(gridIndex))
+                        {
+                            CreateDynamiteModel(cell.Position, gameState.Bombtypes[gridIndex]);
+                        }
+                    }
+                    else if (powerupSprites.ContainsKey(gridIndex))
                     {
                         // delete this power up from the UI
                         RemoveControlsRange(powerupSprites[gridIndex].GetControls());
@@ -141,7 +152,7 @@ namespace bomberman
             powerupSprites[gameState.GetGridIndex(position)] = powerupModel;
         }
 
-        public void CreateDynamiteModel(Vector2f position, IPowerup dymamite)
+        public void CreateDynamiteModel(Vector2f position, IBombtype dymamite)
         {
             var DynamiteModel = new PowerupModel(
                 new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
