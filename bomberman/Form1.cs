@@ -141,6 +141,19 @@ namespace bomberman
             powerupSprites[gameState.GetGridIndex(position)] = powerupModel;
         }
 
+        public void CreateDynamiteModel(Vector2f position, IPowerup dymamite)
+        {
+            var DynamiteModel = new PowerupModel(
+                new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
+                Properties.Resources.dynamite
+            );
+            this.Controls.AddRange(DynamiteModel.GetControls());
+
+            DynamiteModel.BringToFront();
+            BringPlayerSpritesToFront();
+            powerupSprites[gameState.GetGridIndex(position)] = DynamiteModel;
+        }
+
         public bool ControlInvokeRequired(Control c, Action a)
         {
             if (c.InvokeRequired) c.Invoke(new MethodInvoker(delegate { a(); }));
