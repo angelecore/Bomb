@@ -53,7 +53,8 @@
                 var stats = TemporaryStats[i];
                 if (!stats.Applied)
                 {
-                    this.PlayerSpeed += stats.AddSpeedAmount;
+                    this.PlayerSpeed += stats.AddSpeedAmount ?? 0;
+                    this.BombExplosionRadius += stats.AddRadiusAmount ?? 0;
                     stats.Applied = true;
                 }
 
@@ -61,9 +62,10 @@
 
 
                 // Effect finished
-                if (stats.ActiveTimer < 1.0)
+                if (stats.ActiveTimer != null && stats.ActiveTimer < 1.0)
                 {
-                    this.PlayerSpeed -= stats.AddSpeedAmount;
+                    this.PlayerSpeed -= stats.AddSpeedAmount ?? 0;
+                    this.BombExplosionRadius -= stats.AddRadiusAmount ?? 0;
                     TemporaryStats.RemoveAt(i);
                 }
             }

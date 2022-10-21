@@ -10,7 +10,9 @@ namespace bomberman.classes
     {
         public void ApplyPowerUp(GameState gameState, Player player)
         {
-            player.BombExplosionRadius++;
+            player.AddNewStat(new PlayerTemporaryStats()
+                .WithRadius(1)
+            );
         }
     }
 }

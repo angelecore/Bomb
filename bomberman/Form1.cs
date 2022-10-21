@@ -115,7 +115,7 @@ namespace bomberman
 
                 updatedTilesIds.Add(tile.OwnershipId);
                 // update the tile text
-                tile.UpdateText(String.Format("Effect timer: {0} | Add Speed: {1}", (int)stat.ActiveTimer, stat.AddSpeedAmount));
+                tile.UpdateText(stat.ToString());
             }
 
             foreach(var stat in ownerPlayer.TemporaryStats)
@@ -126,7 +126,7 @@ namespace bomberman
                 }
 
                 // add new effect
-                AddNewInvetoryTile(String.Format("Effect timer: {0} | Add Speed: {1}", (int)stat.ActiveTimer, stat.AddSpeedAmount), stat.Id);
+                AddNewInvetoryTile(stat.ToString(), stat.Id);
             }
         }
 

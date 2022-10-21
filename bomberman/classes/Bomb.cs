@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public class Bomb
+    public abstract class Bomb
     {
         public string Id { get; set; }
         public Vector2f Position { get; set; }
@@ -22,5 +22,9 @@ namespace bomberman.classes
             Id = Guid.NewGuid().ToString();
             Radius = radius;
         }
+
+        // Received grid and a lambda function that returns if given position is valid
+        // Returns exploded positions with explosion distance attached to it
+        public abstract List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
     }
 }
