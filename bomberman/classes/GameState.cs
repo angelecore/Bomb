@@ -51,141 +51,35 @@ namespace bomberman.classes
             return position.Y * Width + position.X;
         }
 
-        private void ExplodeBomb(Bomb bomb)
+        private void RemoveBox(Player responsiblePlayer, Vector2f position)
         {
-            Bombs.Remove(bomb);
-            var directions = new List<Directions>() { Directions.Up, Directions.Down, Directions.Left, Directions.Right };
-            for (int i = 0; i < bomb.Radius; i++)
+            var cell = Grid[position.Y, position.X];
+            cell.Type = BlockType.Empty;
+            responsiblePlayer.Score++;
+
+            int gridIndex = GetGridIndex(position);
+
+            // add-on powerup logic!
+            // Every Sixth crate is a bomb change
+            if (responsiblePlayer.Score % 6 == 0)
             {
-                for (int j = directions.Count - 1; j >= 0; j--)
-                {
-                    var dir = directions[j];
-                    var vector = Utils.MultiplyVector(Utils.GetDirectionVector(dir), i);
-                    var newPos = Utils.AddVectors(bomb.Position, vector);
-
-                    // If the position is not valid or the block is indestructable - stop
-                    if (!IsPositionValid(newPos) || Grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
-                    {
-                        directions.RemoveAt(j);
-                        continue;
-                    }
-
-                    var cell = Grid[newPos.Y, newPos.X];
-                    ExplosionIntensity[newPos.Y, newPos.X] = (bomb.Radius - i) * 5;
-
-                    // If another bomb is also is this direction, then also explode this bomb next tic.
-                    bool bombReached = false;
-                    foreach (var anotherBomb in Bombs)
-                    {
-                        if (anotherBomb.Position.Equals(cell.Position))
-                        {
-                            anotherBomb.Timer = 0;
-                            bombReached = true;
-                        }
-                    }
-
-                    foreach(var player in players)
-                    {
-                        if (player.Position.Equals(cell.Position))
-                        {
-                            player.IsAlive = false;
-                        }
-                    }
-
-                    // Destroy this block and stop the explosion in this direction
-                    if (cell.Type == BlockType.Destructable || bombReached)
-                    {
-                        cell.Type = BlockType.Empty;
-                        directions.RemoveAt(j);
-                        bomb.Owner.Score++;
-
-                        // add-on powerup logic!
-                        // Every Sixth crate is a bomb change
-                        if (bomb.Owner.Score % 6 == 0)
-                        {
-                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Dynamite));
-                            continue;
-                        }
-                        // Every third crate is a power up
-                        if (bomb.Owner.Score % 3 == 0)
-                        {
-                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
-                        }
-                    }  
-                }
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
+                return;
             }
-        }
 
-        private void ExplodeDynamite(Bomb bomb)
-        {
-            var temp = GetExplosionCoordinates(bomb, bomb.Radius);
-            Bombs.Remove(bomb);
-                foreach (Vector2f coordinate in temp)
-                {
-                    
-                    // If the position is not valid or the block is indestructable - stop
-                    if (!IsPositionValid(coordinate) || Grid[coordinate.Y, coordinate.X].Type == BlockType.InDestructable)
-                    {
-                        continue;
-                    }
-
-                    var cell = Grid[coordinate.Y, coordinate.X];
-                    ExplosionIntensity[coordinate.Y, coordinate.X] = (bomb.Radius) * 2;
-
-                    // If another bomb is also is this direction, then also explode this bomb next tic.
-                    bool bombReached = false;
-                    foreach (var anotherBomb in Bombs)
-                    {
-                        if (anotherBomb.Position.Equals(cell.Position))
-                        {
-                            anotherBomb.Timer = 0;
-                            bombReached = true;
-                        }
-                    }
-
-                    foreach(var player in players)
-                    {
-                        if (player.Position.Equals(cell.Position))
-                        {
-                            player.IsAlive = false;
-                        }
-                    }
-
-                    // Destroy this block and stop the explosion in this direction
-                    if (cell.Type == BlockType.Destructable || bombReached)
-                    {
-                        cell.Type = BlockType.Empty;
-                        bomb.Owner.Score++;
-
-                        // add-on powerup logic!
-                        if(bomb.Owner.Score  % 6 == 0)
-                        {
-                            Bombtypes.Add(GetGridIndex(cell.Position), new ChangeBombTypeStrategy(BombType.Basic));
-                            continue;
-                        }
-                        // Every third crate is a power up
-                        if (bomb.Owner.Score % 3 == 0)
-                        {
-                            Powerups.Add(GetGridIndex(cell.Position), new AddBombRadiusStrategy());
-                        }
-                    }  
-            }
-        }
-
-        private List<Vector2f> GetExplosionCoordinates(Bomb bomb, int radius)
-        {
-            var Coordinates = new List<Vector2f>();
-            var start = bomb.Position;
-            var range = radius / 2;
-            List<int> collums = new List<int>();
-            for (int i = -range; i <= range ; i++)
+            // add-on powerup logic!
+            // Every 5th crate is a speed power up
+            if (responsiblePlayer.Score % 5 == 0)
             {
-                for (int j = -range; j <= range ; j++)
-                {
-                    Coordinates.Add(new Vector2f(start.X + i, start.Y + j));
-                }
+                Powerups.Add(gridIndex, new SpeedPowerupStrategy());
+                return;
             }
-            return Coordinates;
+
+            // Every third crate is a power up
+            if (responsiblePlayer.Score % 3 == 0)
+            {
+                Powerups.Add(gridIndex, new AddBombRadiusStrategy());
+            }
         }
 
         public GameStatus CheckGameStatus()
@@ -225,7 +119,49 @@ namespace bomberman.classes
                 .ToList();
         }
 
-        public List<Bomb> UpdateBombTimers(double miliSeconds)
+        public void UpdateTick(float miliSeconds)
+        {
+            foreach(var player in players)
+            {
+                player.UpdateTemporaryStats(miliSeconds);
+            }
+        }
+
+        public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner)
+        {
+            foreach(var cell in cells)
+            {
+                var pos = cell.Item1;
+                ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
+
+                // If another bomb is also is this direction, then also explode this bomb next tic.
+                bool bombReached = false;
+                foreach (var anotherBomb in Bombs)
+                {
+                    if (anotherBomb.Position.Equals(pos))
+                    {
+                        anotherBomb.Timer = 0;
+                        bombReached = true;
+                    }
+                }
+
+                foreach (var player in players)
+                {
+                    if (player.Position.Equals(pos))
+                    {
+                        player.IsAlive = false;
+                    }
+                }
+
+                // Destroy this block and stop the explosion in this direction
+                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || bombReached)
+                {
+                    RemoveBox(owner, pos);
+                }
+            }
+        }
+
+        public List<Bomb> UpdateBombTimers(float miliSeconds)
         {
             var explodedBombs = new List<Bomb>();
             for(int i = Bombs.Count - 1; i >= 0; i--)
@@ -235,13 +171,9 @@ namespace bomberman.classes
                 bomb.Timer -= (float)miliSeconds * 0.001f;
                 if (bomb.Timer < 1)
                 {
-                    // boom
-                    // if the bomb is basic it explodes in 4 directions
-                    if(bomb.Owner.BombType == BombType.Basic)
-                    ExplodeBomb(bomb);
-                    // if the bomb is Dynamite it exlodes in a squere formation
-                    else
-                    ExplodeDynamite(bomb);
+                    var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos)); 
+                    Bombs.RemoveAt(i);
+                    RemoveExplodedTiles(cells, bomb.Owner);
                     explodedBombs.Add(bomb);
                 }
             }
@@ -272,6 +204,11 @@ namespace bomberman.classes
             return pos;
         }
 
+        public Player? GetOwnerPlayer()
+        {
+            return players.SingleOrDefault(p => p.Id == PlayerId);
+        }
+
         public List<Player> GetMovingPlayers()
         {
             return players
@@ -286,7 +223,17 @@ namespace bomberman.classes
 
             // Can't place a bomb while still moving
             if (player.Direction != Directions.Idle) return null;
-            var bomb = new Bomb(player.Position, player, player.BombExplosionRadius);
+
+            // can't place two bombs at the same spot
+            foreach(var otherBomb in Bombs)
+            {
+                if (otherBomb.Position.Equals(player.Position))
+                {
+                    return null;
+                }
+            }
+
+            var bomb = BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
             Bombs.Add(bomb);
 
             return bomb;

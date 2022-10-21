@@ -11,11 +11,12 @@ namespace bomberman.classes
         public BombType BombType { get; set; }
         public ChangeBombTypeStrategy(BombType type)
         {
-            BombType = type;
+            this.BombType = type;
         }
+
         public void ChangeBombType(Player player)
         {
-            player.BombType = BombType;
+            player.BombType = this.BombType;
         }
     }
 }

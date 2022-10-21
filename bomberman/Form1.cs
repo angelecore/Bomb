@@ -19,7 +19,8 @@ namespace bomberman
 
         // key is the powerup grid index
         private Dictionary<int, PowerupModel> powerupSprites = new Dictionary<int, PowerupModel>();
-        private Dictionary<int, PowerupModel> BombTypeChangeSprites = new Dictionary<int, PowerupModel>();
+
+        private List<InventoryTile> invetoryTiles = new List<InventoryTile>();
 
         private Label TopLabel;
 
@@ -58,6 +59,105 @@ namespace bomberman
 
             // Inform other users that you have connected
             ws.Send(string.Format("Connected {0}", name));
+
+            CreateInventory();
+        }
+
+        private void CreateInventory()
+        {
+            var label = new Label();
+            label.Location = new Point(blockmap.GetLength(1) * Constants.BLOCK_SIZE + 10, 10);
+            label.Size = new Size(100, 20);
+            label.Text = "Inventory";
+            label.BackColor = Color.Transparent;
+            this.Controls.Add(label);
+
+  
+        }
+
+        private void UpdateInventory()
+        {
+            Player? ownerPlayer = gameState.GetOwnerPlayer();
+
+            if (ownerPlayer == null)
+            {
+                return;
+            }
+
+            SetBaseInvetoryStats(new string[]
+            {
+                String.Format("Name: {0}", ownerPlayer?.Name),
+                String.Format("Position: {0}", ownerPlayer?.Position),
+                String.Format("Speed: {0}", ownerPlayer?.PlayerSpeed),
+                String.Format("Moving Direction: {0}", ownerPlayer?.Direction),
+                String.Format("Bomb radius: {0}", ownerPlayer?.BombExplosionRadius),
+                String.Format("Bomb type: {0}", ownerPlayer?.BombType)
+            });
+
+            HashSet<string> updatedTilesIds = new HashSet<string>();
+            // add effects at the end
+            for(int i = invetoryTiles.Count - 1; i >= 0; i--)
+            {
+                var tile = invetoryTiles[i];
+                if (tile.OwnershipId == null)
+                {
+                    continue;
+                }
+
+                var stat = ownerPlayer?.TemporaryStats?.SingleOrDefault(stat => stat.Id == tile.OwnershipId);
+                if (stat == null)
+                {
+                    // remove this tile
+                    RemoveControlsRange(tile.GetControls());
+                    invetoryTiles.RemoveAt(i);
+                    continue;
+                }
+
+                updatedTilesIds.Add(tile.OwnershipId);
+                // update the tile text
+                tile.UpdateText(stat.ToString());
+            }
+
+            foreach(var stat in ownerPlayer.TemporaryStats)
+            {
+                if (updatedTilesIds.Contains(stat.Id))
+                {
+                    continue;
+                }
+
+                // add new effect
+                AddNewInvetoryTile(stat.ToString(), stat.Id);
+            }
+        }
+
+        private void SetBaseInvetoryStats(string[] texts)
+        {
+            if (invetoryTiles.Count < texts.Length)
+            {
+                foreach(var text in texts)
+                {
+                    AddNewInvetoryTile(text);
+                }
+            } else
+            {
+                for (int i = 0; i < texts.Length; i++)
+                {
+                    invetoryTiles[i].UpdateText(texts[i]);
+                }
+            }
+        }
+
+        private void AddNewInvetoryTile(string text, string ?ownershipId = null)
+        {
+            int locationY = 30 + invetoryTiles.Count * 20 + 10;
+            invetoryTiles.Add(
+                new InventoryTile(
+                    text,
+                    new Point(blockmap.GetLength(1) * Constants.BLOCK_SIZE + 10, locationY),
+                    ownershipId
+                )
+            );
+            this.Controls.AddRange(invetoryTiles.Last().GetControls());
         }
 
         public void UpdateMap()
@@ -141,9 +241,18 @@ namespace bomberman
 
         public void CreatePowerupModel(Vector2f position, IPowerup powerup)
         {
+            Bitmap sprite = null;
+            if (powerup is AddBombRadiusStrategy)
+            {
+                sprite = Properties.Resources.bombRadiusPowerup;
+            } else if (powerup is SpeedPowerupStrategy)
+            {
+                sprite = Properties.Resources.speedPowerupIcon;
+            }
+
             var powerupModel = new PowerupModel(
                 new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
-                Properties.Resources.bombRadiusPowerup
+                sprite
             );
             this.Controls.AddRange(powerupModel.GetControls());
 
@@ -299,6 +408,10 @@ namespace bomberman
                 this.Controls.Remove(TopLabel);
                 TopLabel = null;
             }
+
+            TimeSpan ts = stopwatch.Elapsed;
+            gameState.UpdateTick((float)ts.TotalMilliseconds);
+
             // Update bomb timer labels and remove exploded bombs
             UpdateBombs();
             // Update information on the map based on the new state
@@ -309,6 +422,9 @@ namespace bomberman
 
             // Move player sprites, whose state is not idle
             MoveAnimations();
+
+            // Update inventory
+            UpdateInventory();
 
             // Check if final game state has been reached
             var gameStatus = gameState.CheckGameStatus();
@@ -363,7 +479,7 @@ namespace bomberman
         {
             TimeSpan ts = stopwatch.Elapsed;
             // Remove exploded bombs sprites and labels
-            var explodedBombs = gameState.UpdateBombTimers(ts.TotalMilliseconds);
+            var explodedBombs = gameState.UpdateBombTimers((float)ts.TotalMilliseconds);
             foreach (var explodedBomb in explodedBombs)
             {
                 RemoveControlsRange(bombSprites[explodedBomb.Id].GetControls());
@@ -382,7 +498,7 @@ namespace bomberman
             var movingPlayers = gameState.GetMovingPlayers();
             foreach (var player in movingPlayers)
             {
-                int speed = 5;
+                int speed = 5 * player.PlayerSpeed;
                 var playerModel = playerSprites[player.Id];
 
                 var dirVector = Utils.GetDirectionVector(player.Direction);
