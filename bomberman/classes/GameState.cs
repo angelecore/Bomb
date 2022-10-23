@@ -328,6 +328,11 @@ namespace bomberman.classes
             this.PlayerId = id;
         }
 
+        public List<Bomb> getBombsByPlayerId(string id)
+        {
+            return Bombs.FindAll(bomb => bomb.Owner.Id == id);
+        }
+
         private void LoadMap()
         {
             var maplayout = Properties.Resources.Level1;

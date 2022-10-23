@@ -1,4 +1,5 @@
 using bomberman.classes;
+using bomberman.classes.decorator;
 using bomberman.client;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -34,11 +35,14 @@ namespace bomberman
         GameState gameState;
 
         private Stopwatch stopwatch = new Stopwatch();
+
+        CommandResolver commandResolver;
         public Form1(string name)
         {
             InitializeComponent();
 
             gameState = new GameState(name);
+            commandResolver = new CommandResolver();
 
             CreateMap();
 
@@ -282,6 +286,10 @@ namespace bomberman
             return true;
         }
 
+        public void setBombSprites(Dictionary<string, BombModel> bombSprites)
+        {
+            this.bombSprites = bombSprites;
+        }
         
         private void HandleEvents(string type, string value)
         {
@@ -298,54 +306,19 @@ namespace bomberman
                     HandlePlayerJoined(split1[0], split1[1]);
                     break;
                 case "Move":
-                    if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
-                    {
-                        return;
-                    }
                     var split2 = value.Split(" ");
-                    gameState.PerformAction(split2[0], split2[1]);
+                    commandResolver.setCommand(new MoveCommand(gameState, split2[0], split2[1]));
                     break;
                 case "Bomb":
-                    if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
-                    {
-                        return;
-                    }
-                    HandleBombPlacement(value);
+                    commandResolver.setCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value));
                     break;
                 case "Logs":
                     var logs = JsonConvert.DeserializeObject<List<string>>(value);
-                    HandleLogs(logs);
+                    commandResolver.setCommand(new LogsCommand(gameState, logs));
                     break;
             }
-        }
-       
-        private void HandleLogs(List<string> logs)
-        {
-            using (FileStream fs = File.Create(
-                string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName)
-                )
-            )
-            {                  
-                using (var fw = new StreamWriter(fs))
-                {
-                    foreach (var log in logs)
-                    {
-                        fw.WriteLine(log);
-                        fw.Flush();
-                    }
-                }
-            }
-        }
 
-        private void HandleBombPlacement(string id)
-        {
-            var bomb = gameState.PlaceBomb(id);
-            if (bomb == null) return;
-            bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), Properties.Resources.bombSprite);
-
-            this.Controls.AddRange(bombSprites[bomb.Id].GetControls());
-            bombSprites[bomb.Id].BringToFront();
-            playerSprites[id].BringToFront();
+            commandResolver.activate();
         }
 
         private void HandlePlayerJoined(string id, string userName)
@@ -370,11 +343,11 @@ namespace bomberman
 
         private void CreatePlayerSprite(string playerId, string playerName, Vector2f position)
         {
-            playerSprites[playerId] = new PlayerModel(
-                playerName,
-                new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
-                Properties.Resources.character_positioned
-            );
+            var bombCount = gameState.getBombsByPlayerId(playerId).Count();
+            var point = new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE);
+            var sprite = Properties.Resources.character_positioned;
+            var playerModel = new PlayerBombsCount(new PlayerName(new PlayerSprite(new PlayerModel(playerName, bombCount, point, sprite))));
+            playerSprites[playerId] = (PlayerModel)playerModel.decorate();
             this.Controls.AddRange(playerSprites[playerId].GetControls());
             playerSprites[playerId].BringToFront();
         }
@@ -420,6 +393,9 @@ namespace bomberman
             // Remove dead players
             RemoveDeadPlayers(gameState.GetKilledPlayers());
 
+            // Update player bombs count label on sprite
+            UpdatePlayerSpriteBombCount(gameState.GetOwnerPlayer());
+
             // Move player sprites, whose state is not idle
             MoveAnimations();
 
@@ -453,7 +429,7 @@ namespace bomberman
 
             stopwatch.Restart();
         }
-        
+
         private void RemoveControlsRange(Control[] controls)
         {
             foreach (var control in controls)
@@ -472,6 +448,14 @@ namespace bomberman
 
                 // Now we can delete this player from the game
                 gameState.RemovePlayer(player.Id);
+            }
+        }
+
+        private void UpdatePlayerSpriteBombCount(Player? player)
+        {
+            if (player != null)
+            {
+                playerSprites[player.Id].UpdatePlayerBombsPlaced(gameState.getBombsByPlayerId(player.Id).Count());
             }
         }
 
