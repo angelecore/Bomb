@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace bomberman.client
 {
-    internal class PlayerModel : IModel
+    public class PlayerModel : IModel, IPlayerDecorator
     {
         public string Name { get; set; }
+
+        public int PlacedBombs { get; set; }
 
         public Point Position { get; set; }
 
@@ -17,37 +19,26 @@ namespace bomberman.client
         public PictureBox PlayerPictureBox { get; set; }
         public Label PlayerNameLabel { get; set; }
 
-        public PlayerModel(string name, Point position, Image sprite)
+        public Label PlayerBombsPlacedLabel { get; set; }
+
+        public PlayerModel(string name, int placedBombs, Point position, Image sprite)
         {
             Name = name;
             Position = position;
             PlayerSprite = sprite;
-
-            PlayerPictureBox = new PictureBox();
-            PlayerPictureBox.Size = new Size(Constants.BLOCK_SIZE, Constants.BLOCK_SIZE);
-            PlayerPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
-            PlayerPictureBox.BackColor = Color.Transparent;
-            PlayerPictureBox.Image = sprite;
-            PlayerPictureBox.Location = position;
-
-            PlayerNameLabel = new Label();
-            PlayerNameLabel.Location = position;
-            PlayerNameLabel.Size = new Size(Constants.BLOCK_SIZE, 8);
-            PlayerNameLabel.Font = new Font("Arial", 5);
-            PlayerNameLabel.Text = name;
-            PlayerNameLabel.Parent = PlayerPictureBox;
-            PlayerNameLabel.BackColor = Color.Transparent;
+            PlacedBombs = placedBombs;
         }
 
         public void BringToFront()
         {
             PlayerPictureBox.BringToFront();
             PlayerNameLabel.BringToFront();
+            PlayerBombsPlacedLabel.BringToFront();
         }
 
         public Control[] GetControls()
         {
-            return new Control[] { PlayerPictureBox, PlayerNameLabel };
+            return new Control[] { PlayerPictureBox, PlayerNameLabel, PlayerBombsPlacedLabel };
         }
 
         public void UpdatePosition(Point p)
@@ -55,6 +46,38 @@ namespace bomberman.client
             Position = p;
             PlayerPictureBox.Location = Position;
             PlayerNameLabel.Location = Position;
+            PlayerBombsPlacedLabel.Location = new Point(Position.X, Position.Y + 18); ;
+        }
+
+        public void UpdatePlayerBombsPlaced(int bombsCount)
+        {
+            PlacedBombs = bombsCount;
+            PlayerBombsPlacedLabel.Text = PlacedBombs.ToString();
+        }
+
+        public IPlayerDecorator decorate()
+        {
+            return this;
+        }
+
+        public string getName()
+        {
+            return Name;
+        }
+
+        public int getPlacedBombs()
+        {
+            return PlacedBombs;
+        }
+
+        public Point getPosition()
+        {
+            return Position;
+        }
+
+        public Image getPlayerSprite()
+        {
+            return PlayerSprite;
         }
     }
 }

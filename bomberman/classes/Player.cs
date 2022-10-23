@@ -84,6 +84,5 @@
         {
             this.Direction = direction;
         }
-
     }
 }
