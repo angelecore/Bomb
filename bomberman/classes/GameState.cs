@@ -17,6 +17,7 @@ namespace bomberman.classes
 
     public class GameState
     {
+
         private GameStatus CurrentGameStatus;
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
@@ -25,6 +26,10 @@ namespace bomberman.classes
         public int Height;
 
         public Block[,] Grid;
+
+        public List<Fire> FireList = new List<Fire>();
+
+        private BombType allBombType;
 
         public int[,] ExplosionIntensity;
 
@@ -54,20 +59,24 @@ namespace bomberman.classes
         private void RemoveBox(Player responsiblePlayer, Vector2f position)
         {
             var cell = Grid[position.Y, position.X];
-            cell.Type = BlockType.Empty;
+            //if(responsiblePlayer.BombType == BombType.Fire)
+                //cell.Type = BlockType.Fire;
+            //else
+                cell.Type = BlockType.Empty;
             responsiblePlayer.Score++;
 
             int gridIndex = GetGridIndex(position);
-
+            var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
             // add-on powerup logic!
+            var random = new Random();
             // Every Sixth crate is a bomb change
             if (responsiblePlayer.Score % 6 == 0)
             {
-                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
+                //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
                 return;
             }
 
-            // add-on powerup logic!
             // Every 5th crate is a speed power up
             if (responsiblePlayer.Score % 5 == 0)
             {
@@ -127,7 +136,7 @@ namespace bomberman.classes
             }
         }
 
-        public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner)
+        public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, Fire fire)
         {
             foreach(var cell in cells)
             {
@@ -152,8 +161,13 @@ namespace bomberman.classes
                         player.IsAlive = false;
                     }
                 }
-
-                // Destroy this block and stop the explosion in this direction
+                var tyle = Grid[pos.Y, pos.X];
+                if (owner.BombType == BombType.Fire)
+                {   
+                    tyle.firerefrence = fire; 
+                    tyle.Type = BlockType.Fire;
+                }
+                 //Destroy this block and stop the explosion in this direction
                 if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || bombReached)
                 {
                     RemoveBox(owner, pos);
@@ -171,9 +185,15 @@ namespace bomberman.classes
                 bomb.Timer -= (float)miliSeconds * 0.001f;
                 if (bomb.Timer < 1)
                 {
-                    var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos)); 
+                    Fire fire = null;
+                    var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+                    if (bomb.Owner.BombType == BombType.Fire)
+                    {
+                        fire = new Fire(DateTime.Now.Millisecond.ToString());
+                        FireList.Add(fire);
+                    }
                     Bombs.RemoveAt(i);
-                    RemoveExplodedTiles(cells, bomb.Owner);
+                    RemoveExplodedTiles(cells, bomb.Owner, fire);
                     explodedBombs.Add(bomb);
                 }
             }
@@ -287,7 +307,7 @@ namespace bomberman.classes
                 return;
             }
 
-            if (Grid[nextPos.Y, nextPos.X].Type != BlockType.Empty && player.Direction == Directions.Idle)
+            if (Grid[nextPos.Y, nextPos.X].Type != BlockType.Empty && Grid[nextPos.Y, nextPos.X].Type != BlockType.Fire && player.Direction == Directions.Idle)
             {
                 return;
             }
@@ -306,6 +326,10 @@ namespace bomberman.classes
             player.Move();
 
             int gridIndex = GetGridIndex(player.Position);
+            var cell = Grid[player.Position.Y,player.Position.X];
+            
+            if (cell.Type == BlockType.Fire)
+            { player.IsAlive = false; }
             if (Powerups.ContainsKey(gridIndex))
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
