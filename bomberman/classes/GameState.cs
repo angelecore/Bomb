@@ -1,4 +1,5 @@
-﻿using System;
+﻿using bomberman.classes.facade;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -265,52 +266,14 @@ namespace bomberman.classes
 
             if (player == null) return;
 
-            Directions newDirection = Directions.Idle;
+            PlayerMovementFacade playerMovementFacade = new PlayerMovementFacade(player, action, Width, Height, Grid);
 
-            switch (action)
-            {
-                case "Up":
-                    newDirection = Directions.Up;
-                    break;
-                case "Down":
-                    newDirection = Directions.Down;
-                    break;
-                case "Left":
-                    newDirection = Directions.Left;
-                    break;
-                case "Right":
-                    newDirection = Directions.Right;
-                    break;
-            }
-
-            var dirVec = Utils.GetDirectionVector(newDirection);
-
-            if (player.Direction != Directions.Idle)
-            {
-                var currentInvVec = Utils.MultiplyVector(
-                    Utils.GetDirectionVector(player.Direction),
-                    -1
-                );
-
-                // while the player hasnt stopped moving, you can only go backwards.
-                if (!currentInvVec.Equals(dirVec))
-                {
-                    return;
-                }    
-            }
-
-         
-            var nextPos = Utils.AddVectors(player.Position, dirVec);
-            
-            if (!IsPositionValid(nextPos))
+            if (!playerMovementFacade.canSetDirection())
             {
                 return;
             }
 
-            if (Grid[nextPos.Y, nextPos.X].Type != BlockType.Empty && Grid[nextPos.Y, nextPos.X].Type != BlockType.Fire && player.Direction == Directions.Idle)
-            {
-                return;
-            }
+            var newDirection = playerMovementFacade.getNewDirection();
 
             // if the player was already moving, then update its position
             if (player.Direction != Directions.Idle && player.Direction != newDirection)
@@ -318,7 +281,7 @@ namespace bomberman.classes
                 MovePlayer(player);
             }
 
-            player.SetDirection(newDirection);    
+            player.SetDirection(newDirection);
         }
 
         public void MovePlayer(Player player)
