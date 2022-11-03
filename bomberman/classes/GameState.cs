@@ -66,7 +66,7 @@ namespace bomberman.classes
             responsiblePlayer.Score++;
 
             int gridIndex = GetGridIndex(position);
-            var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
+            var temp = new List<BombType> { BombType.Basic, BombType.Dynamite, BombType.Fire };
             // add-on powerup logic!
             var random = new Random();
             // Every Sixth crate is a bomb change
