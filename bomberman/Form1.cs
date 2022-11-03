@@ -30,6 +30,7 @@ namespace bomberman
             { BlockType.Empty, Color.LightGray },
             { BlockType.Destructable, Color.DarkGray },
             { BlockType.InDestructable, Color.Black },
+            { BlockType.Fire, Color.Red },
         };
 
         GameState gameState;
@@ -134,6 +135,47 @@ namespace bomberman
             }
         }
 
+        private void UpdateFire()
+        {
+            TimeSpan temp = stopwatch.Elapsed;
+            List<Fire> FireRemove = new List<Fire>();
+
+            foreach (Fire fire in gameState.FireList)
+            {
+
+                if (fire.Timer <= 0)
+                {
+                    for (int y = 0; y < gameState.Grid.GetLength(0); y++)
+                    {
+                        for (int x = 0; x < gameState.Grid.GetLength(1); x++)
+                        {
+                            var cell = gameState.Grid[y, x];
+                            var block = blockmap[y, x];
+
+                            if (cell.firerefrence != null)
+                            {
+                                if (cell.firerefrence.ID == fire.ID)
+                                {
+                                    cell.firerefrence = null;
+                                    cell.Type = BlockType.Empty;
+                                }
+                            }
+
+                        }
+                    }
+                    FireRemove.Add(fire);
+                }
+                fire.Timer -= (float)temp.TotalMilliseconds * 0.001f;
+            }
+            if (FireRemove.Count > 0)
+            {
+                foreach (Fire fire in FireRemove)
+                {
+                    gameState.FireList.Remove(fire);
+                }
+            }
+        }
+
         private void SetBaseInvetoryStats(string[] texts)
         {
             if (invetoryTiles.Count < texts.Length)
@@ -172,7 +214,7 @@ namespace bomberman
                 {
                     var cell = gameState.Grid[y, x];
                     var block = blockmap[y, x];
-
+                    
                     block.BackColor = BlockColors[cell.Type];
 
                     if (gameState.ExplosionIntensity[y, x] > 0)
@@ -190,6 +232,7 @@ namespace bomberman
                             CreatePowerupModel(cell.Position, gameState.Powerups[gridIndex]);
                         }
                     } 
+
                     // add or delete BombChange
                     else if (gameState.Bombtypes.ContainsKey(gridIndex))
                     {
@@ -205,6 +248,8 @@ namespace bomberman
                         RemoveControlsRange(powerupSprites[gridIndex].GetControls());
                         powerupSprites.Remove(gridIndex);
                     }
+
+                    
                 }
             }
         }
@@ -357,6 +402,7 @@ namespace bomberman
 
         }
 
+        
 
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
@@ -373,6 +419,7 @@ namespace bomberman
                     this.Controls.Add(TopLabel);
                     TopLabel.Text = "Waiting for players...";
                     TopLabel.BringToFront();
+
                 }
                 return;
             } 
@@ -402,6 +449,9 @@ namespace bomberman
             // Update inventory
             UpdateInventory();
 
+            // Update fire refrence timers
+            UpdateFire();
+           
             // Check if final game state has been reached
             var gameStatus = gameState.CheckGameStatus();
 

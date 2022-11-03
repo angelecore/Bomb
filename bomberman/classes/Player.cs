@@ -13,6 +13,7 @@
     {
         Basic,
         Dynamite,
+        Fire,
     }
 
     public class Player

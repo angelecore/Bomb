@@ -16,6 +16,8 @@ namespace bomberman.classes
                     return new BasicBomb(position, owner, radius);
                 case BombType.Dynamite:
                     return new DynamiteBomb(position, owner, radius);
+                case BombType.Fire:
+                    return new FireBomb(position, owner, radius);
                 default:
                     break;
             }
