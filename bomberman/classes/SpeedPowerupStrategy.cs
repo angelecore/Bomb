@@ -10,9 +10,10 @@ namespace bomberman.classes
     {
         public void ApplyPowerUp(GameState gameState, Player player)
         {
-            player.AddNewStat(new PlayerTemporaryStats()
+            player.AddNewStat(new PlayerStatsBuilder()
                 .WithTimer(5)
                 .WithAddSpeed(1)
+                .Build()
             );
         }
     }

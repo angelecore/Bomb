@@ -21,24 +21,6 @@ namespace bomberman.classes
             Applied = false;
         }
 
-        public PlayerTemporaryStats WithRadius(int radius)
-        {
-            AddRadiusAmount = radius;
-            return this;
-        }
-
-        public PlayerTemporaryStats WithTimer(float timer)
-        {
-            ActiveTimer = timer;
-            return this;
-        }
-
-        public PlayerTemporaryStats WithAddSpeed(int speed)
-        {
-            this.AddSpeedAmount = speed;
-            return this;
-        }
-
         public override string ToString()
         {
 
