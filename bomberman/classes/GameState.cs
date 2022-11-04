@@ -30,7 +30,7 @@ namespace bomberman.classes
 
         public List<Fire> FireList = new List<Fire>();
 
-        private BombType allBombType;
+        public List<FireController> FireControllerList = new List<FireController>();
 
         public int[,] ExplosionIntensity;
 
@@ -67,14 +67,26 @@ namespace bomberman.classes
             responsiblePlayer.Score++;
 
             int gridIndex = GetGridIndex(position);
-            var temp = new List<BombType> { BombType.Basic, BombType.Dynamite, BombType.Fire };
+            //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
             // add-on powerup logic!
             var random = new Random();
+            if (responsiblePlayer.Score % 10 == 0)
+            {
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Basic));
+                return;
+            }
+
+            if (responsiblePlayer.Score % 8 == 0)
+            {
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Fire));
+                return;
+            }
+
             // Every Sixth crate is a bomb change
             if (responsiblePlayer.Score % 6 == 0)
             {
-                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
-                //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
+                //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
+                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
                 return;
             }
 
@@ -137,7 +149,7 @@ namespace bomberman.classes
             }
         }
 
-        public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, Fire fire)
+        public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, FireController fire)
         {
             foreach(var cell in cells)
             {
@@ -164,8 +176,11 @@ namespace bomberman.classes
                 }
                 var tyle = Grid[pos.Y, pos.X];
                 if (owner.BombType == BombType.Fire)
-                {   
-                    tyle.firerefrence = fire; 
+                {
+                    FireController clone = fire.ShallowClone();
+                    clone.BlockX = pos.X;
+                    clone.BlockY = pos.Y;
+                    FireControllerList.Add(clone);
                     tyle.Type = BlockType.Fire;
                 }
                  //Destroy this block and stop the explosion in this direction
@@ -188,13 +203,15 @@ namespace bomberman.classes
                 {
                     Fire fire = null;
                     var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+                    FireController controller = null;
                     if (bomb.Owner.BombType == BombType.Fire)
                     {
                         fire = new Fire(DateTime.Now.Millisecond.ToString());
+                        controller = new FireController(fire.ID,fire,bomb.Position.X,bomb.Position.Y);
                         FireList.Add(fire);
                     }
                     Bombs.RemoveAt(i);
-                    RemoveExplodedTiles(cells, bomb.Owner, fire);
+                    RemoveExplodedTiles(cells, bomb.Owner, controller);
                     explodedBombs.Add(bomb);
                 }
             }

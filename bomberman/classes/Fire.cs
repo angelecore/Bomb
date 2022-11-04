@@ -16,10 +16,5 @@ namespace bomberman.classes
             this.Timer = 5f;
             this.ID = id;
         }
-
-        public Fire ShallowClone()
-        {
-            return this;
-        }
     }
 }
