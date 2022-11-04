@@ -38,7 +38,7 @@ namespace bomberman
         {
             ApplicationConfiguration.Initialize();
             
-            new GameNetwork()
+            new Subject()
                 .Run();
 
 

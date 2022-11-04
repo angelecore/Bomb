@@ -9,13 +9,21 @@ using WebSocketSharp.Server;
 
 namespace bomberman.server
 {
-    public class GameServer : WebSocketBehavior
+    public class Observer : WebSocketBehavior
     {
-        GameNetwork _gameNetwork;
+        public string SocketId { get; set; }
+        public string UserName { get; set; }
 
-        public GameServer(GameNetwork gameNetwork)
+        private Subject _gameNetwork;
+        
+        public Observer(Subject gameNetwork)
         {
             _gameNetwork = gameNetwork;
+        }
+
+        public void Update(string data)
+        {
+            Send(data);
         }
 
         protected override void OnMessage(MessageEventArgs e)
@@ -33,17 +41,23 @@ namespace bomberman.server
             {
                 string userName = e.Data.Split(' ')[1];
 
-                var users = _gameNetwork.GetAllUsers();
+                var users = _gameNetwork.GetAllObservers();
                 foreach (var p in Sessions.ActiveIDs.ToArray().SubArray(0, Sessions.ActiveIDs.Count() - 1))
                 {
                     Send(string.Format("Joined {0} {1}", p.ToString(), users[p.ToString()].UserName));
                 }
+
+
+                this.SocketId = Sessions.ActiveIDs.Last();
+                this.UserName = userName;
+
+                _gameNetwork.Attach(this);
                 
-                _gameNetwork.AddNewUser(Sessions.ActiveIDs.Last(), userName);
                 // the user itself only needs to know of it's session id.
                 Send(string.Format("Connected {0}", Sessions.ActiveIDs.Last()));
 
-                Sessions.Broadcast(string.Format("Joined {0} {1}", Sessions.ActiveIDs.Last(), userName));
+                _gameNetwork.Notify(string.Format("Joined {0} {1}", Sessions.ActiveIDs.Last(), userName));
+               // Sessions.Broadcast();
             }
             else
             {

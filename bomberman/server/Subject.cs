@@ -7,29 +7,37 @@ using WebSocketSharp.Server;
 
 namespace bomberman.server
 {
-    public class GameNetwork
+    public class Subject
     {
         WebSocketServer server = new WebSocketServer("ws://127.0.0.1:7980");
-        private Dictionary<string, User> Users;
+        private Dictionary<string, Observer> Observers;
         private List<string> Events;
 
-        public GameNetwork()
+        public Subject()
         {
             server = new WebSocketServer("ws://127.0.0.1:7980");
-            server.AddWebSocketService("/Server", () => new GameServer(this));
+            server.AddWebSocketService("/Server", () => new Observer(this));
 
-            Users = new Dictionary<string, User>();
+            Observers = new Dictionary<string, Observer>();
             Events = new List<string>();
         }
 
-        public Dictionary<string, User> GetAllUsers()
+        public Dictionary<string, Observer> GetAllObservers()
         {
-            return Users;
+            return Observers;
         }
 
-        public void AddNewUser(string socketId, string name)
+        public void Notify(string data)
         {
-            Users.Add(socketId, new User(socketId, name));
+            foreach(var observer in Observers)
+            {
+                observer.Value.Update(data);
+            }
+        }
+
+        public void Attach(Observer observer)
+        {
+            Observers.Add(observer.SocketId, observer);
         }
 
         public void AddNewEvent(string userEvent) 
