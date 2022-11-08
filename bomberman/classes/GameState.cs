@@ -82,9 +82,17 @@ namespace bomberman.classes
             //var random = new Random();
             if (flag)
             {
-                if (responsiblePlayer.Score % 10 == 0)
+                if (responsiblePlayer.Score % 15 == 0)
                 {
                     Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Basic));
+                    return;
+                }
+
+                
+                if (responsiblePlayer.Score % 10 == 0)
+                {
+                    //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
+                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Cluster));
                     return;
                 }
 
@@ -95,10 +103,9 @@ namespace bomberman.classes
                 }
 
                 // Every Sixth crate is a bomb change
-                if (responsiblePlayer.Score % 2 == 0)
+                if (responsiblePlayer.Score % 10 == 0)
                 {
-                    //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
-                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Cluster));
+                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
                     return;
                 }
 
@@ -234,9 +241,9 @@ namespace bomberman.classes
                         foreach (var cell in cells)
                         {
                             bool flag = true;
-                            if (cell.Item1 == bomb.Position || bomb.Generation >= 2)
+                            if (cell.Item1.Equals(bomb.Position))
                                 continue;
-                            Bomb clone = (ClusterBomb) bomb.Clone(bomb, cell.Item1);
+                            Bomb clone = (ClusterBomb) bomb.Clone(bomb, cell.Item1, bomb.Generation+1);
                             foreach (var otherBomb in Bombs)
                             {
                                 if (otherBomb.Position.Equals(clone.Position))

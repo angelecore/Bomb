@@ -12,9 +12,9 @@ namespace bomberman.classes
         {
         }
 
-        public override object Clone(Bomb bomb, Vector2f position)
+        public override object Clone(Bomb bomb, Vector2f position, int generation)
         {
-            ClusterBomb temp = new ClusterBomb(position, bomb.Owner, bomb.Radius, bomb.Generation+=1);
+            ClusterBomb temp = new ClusterBomb(position, bomb.Owner, bomb.Radius, generation);
             temp.Timer = 2f;
             return temp;
         }

@@ -29,6 +29,6 @@ namespace bomberman.classes
         // Returns exploded positions with explosion distance attached to it
         public abstract List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
 
-        public abstract object Clone(Bomb bomb, Vector2f position);
+        public abstract object Clone(Bomb bomb, Vector2f position, int generation);
     }
 }

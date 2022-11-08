@@ -12,7 +12,7 @@ namespace bomberman.classes
         {
         }
 
-        public override object Clone(Bomb bomb, Vector2f position)
+        public override object Clone(Bomb bomb, Vector2f position, int generation)
         {
             throw new NotImplementedException();
         }
