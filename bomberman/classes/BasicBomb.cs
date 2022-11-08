@@ -8,8 +8,13 @@ namespace bomberman.classes
 {
     public class BasicBomb : Bomb
     {
-        public BasicBomb(Vector2f position, Player owner, int radius) : base(position, owner, radius)
+        public BasicBomb(Vector2f position, Player owner, int radius, int generation) : base(position, owner, radius, generation)
         {
+        }
+
+        public override object Clone(Bomb bomb, Vector2f position)
+        {
+            throw new NotImplementedException();
         }
 
         public override List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)

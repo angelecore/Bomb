@@ -13,11 +13,13 @@ namespace bomberman.classes
             switch (type)
             {
                 case BombType.Basic:
-                    return new BasicBomb(position, owner, radius);
+                    return new BasicBomb(position, owner, radius,0);
                 case BombType.Dynamite:
-                    return new DynamiteBomb(position, owner, radius);
+                    return new DynamiteBomb(position, owner, radius,0);
                 case BombType.Fire:
-                    return new FireBomb(position, owner, radius);
+                    return new FireBomb(position, owner, radius,0);
+                case BombType.Cluster:
+                    return new ClusterBomb(position, owner, radius,0);
                 default:
                     break;
             }

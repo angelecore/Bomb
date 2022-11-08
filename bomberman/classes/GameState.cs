@@ -43,7 +43,12 @@ namespace bomberman.classes
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
         int maxPlayerCount;
+        private Form1 form;
 
+        public void SetForm(Form1 form)
+        {
+            this.form = form;
+        }
         public GameState(string playerName, int maxPlayerCount = 2)
         {
             this.PlayerName = playerName;
@@ -63,45 +68,54 @@ namespace bomberman.classes
             //if(responsiblePlayer.BombType == BombType.Fire)
                 //cell.Type = BlockType.Fire;
             //else
-                cell.Type = BlockType.Empty;
-            responsiblePlayer.Score++;
+            bool flag = false;
+            if(cell.Type != BlockType.Empty)
+            {
+                responsiblePlayer.Score++;
+                flag = true;
+            }
+            cell.Type = BlockType.Empty;
 
             int gridIndex = GetGridIndex(position);
             //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
             // add-on powerup logic!
-            var random = new Random();
-            if (responsiblePlayer.Score % 10 == 0)
+            //var random = new Random();
+            if (flag)
             {
-                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Basic));
-                return;
-            }
+                if (responsiblePlayer.Score % 10 == 0)
+                {
+                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Basic));
+                    return;
+                }
 
-            if (responsiblePlayer.Score % 8 == 0)
-            {
-                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Fire));
-                return;
-            }
+                if (responsiblePlayer.Score % 8 == 0)
+                {
+                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Fire));
+                    return;
+                }
 
-            // Every Sixth crate is a bomb change
-            if (responsiblePlayer.Score % 6 == 0)
-            {
-                //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
-                Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
-                return;
-            }
+                // Every Sixth crate is a bomb change
+                if (responsiblePlayer.Score % 2 == 0)
+                {
+                    //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
+                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Cluster));
+                    return;
+                }
 
-            // Every 5th crate is a speed power up
-            if (responsiblePlayer.Score % 5 == 0)
-            {
-                Powerups.Add(gridIndex, new SpeedPowerupStrategy());
-                return;
-            }
+                // Every 5th crate is a speed power up
+                if (responsiblePlayer.Score % 5 == 0)
+                {
+                    Powerups.Add(gridIndex, new SpeedPowerupStrategy());
+                    return;
+                }
 
-            // Every third crate is a power up
-            if (responsiblePlayer.Score % 3 == 0)
-            {
-                Powerups.Add(gridIndex, new AddBombRadiusStrategy());
+                // Every third crate is a power up
+                if (responsiblePlayer.Score % 3 == 0)
+                {
+                    Powerups.Add(gridIndex, new AddBombRadiusStrategy());
+                }
             }
+            //return;
         }
 
         public GameStatus CheckGameStatus()
@@ -183,6 +197,7 @@ namespace bomberman.classes
                     FireControllerList.Add(clone);
                     tyle.Type = BlockType.Fire;
                 }
+                
                  //Destroy this block and stop the explosion in this direction
                 if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || bombReached)
                 {
@@ -211,8 +226,32 @@ namespace bomberman.classes
                         FireList.Add(fire);
                     }
                     Bombs.RemoveAt(i);
+                    Console.WriteLine(cells.GetType());
                     RemoveExplodedTiles(cells, bomb.Owner, controller);
                     explodedBombs.Add(bomb);
+                    if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)
+                    {
+                        foreach (var cell in cells)
+                        {
+                            bool flag = true;
+                            if (cell.Item1 == bomb.Position || bomb.Generation >= 2)
+                                continue;
+                            Bomb clone = (ClusterBomb) bomb.Clone(bomb, cell.Item1);
+                            foreach (var otherBomb in Bombs)
+                            {
+                                if (otherBomb.Position.Equals(clone.Position))
+                                {
+                                        flag=false;
+                                }
+                            }
+                            if (flag)
+                            {
+                                Bombs.Add(clone);
+                                form.handlebombclonning(clone);
+                            }
+                            Console.WriteLine(clone.Id);
+                        }
+                    }
                 }
             }
             return explodedBombs;

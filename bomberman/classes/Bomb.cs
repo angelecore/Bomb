@@ -13,18 +13,22 @@ namespace bomberman.classes
         public float Timer { get; set; }
         public int Radius { get; set; }
         public Player Owner { get; set; }
+        public int Generation { get; set; }
 
-        public Bomb(Vector2f position, Player owner, int radius)
+        public Bomb(Vector2f position, Player owner, int radius, int generation)
         {
             Position = position;
             Timer = 8.0f;
             Owner = owner;
             Id = Guid.NewGuid().ToString();
             Radius = radius;
+            this.Generation = generation;
         }
 
         // Received grid and a lambda function that returns if given position is valid
         // Returns exploded positions with explosion distance attached to it
         public abstract List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
+
+        public abstract object Clone(Bomb bomb, Vector2f position);
     }
 }

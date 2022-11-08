@@ -6,23 +6,19 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public class DynamiteBomb : Bomb
+    public interface IExplode
     {
-        public DynamiteBomb(Vector2f position, Player owner, int radius, int generation) : base(position, owner, radius, generation)
-        {
-        }
+        public List<Tuple<Vector2f, int>> ExplosionPossitions(Block[,] grid, Func<Vector2f, bool> isPositionValid, Bomb bomb);
+    }
 
-        public override object Clone(Bomb bomb, Vector2f position)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
+    class DynamiteExplosion : IExplode
+    {
+        public List<Tuple<Vector2f, int>> ExplosionPossitions(Block[,] grid, Func<Vector2f, bool> isPositionValid, Bomb bomb)
         {
             var positions = new List<Tuple<Vector2f, int>>();
 
-            var start = Position;
-            var range = Radius / 2;
+            var start = bomb.Position;
+            var range = bomb.Radius / 2;
 
             for (int i = -range; i <= range; i++)
             {
@@ -35,10 +31,11 @@ namespace bomberman.classes
                         continue;
                     }
 
-                    positions.Add(new Tuple<Vector2f, int>(newPos, Radius * 2));
+                    positions.Add(new Tuple<Vector2f, int>(newPos, bomb.Radius * 2));
                 }
             }
             return positions;
         }
+
     }
 }

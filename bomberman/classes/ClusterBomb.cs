@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    internal class FireBomb : Bomb
+    internal class ClusterBomb : Bomb
     {
-        public FireBomb(Vector2f position, Player owner, int radius, int generation) : base(position, owner, radius, generation)
+        public ClusterBomb(Vector2f position, Player owner, int radius, int generation) : base(position, owner, radius, generation)
         {
         }
 
         public override object Clone(Bomb bomb, Vector2f position)
         {
-            throw new NotImplementedException();
+            ClusterBomb temp = new ClusterBomb(position, bomb.Owner, bomb.Radius, bomb.Generation+=1);
+            temp.Timer = 2f;
+            return temp;
         }
 
         public override List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
@@ -22,7 +24,7 @@ namespace bomberman.classes
             var positions = new List<Tuple<Vector2f, int>>();
 
             var directions = new List<Directions>() { Directions.Up, Directions.Down, Directions.Left, Directions.Right };
-            for (int i = 0; i < Radius; i++)
+            for (int i = 0; i < 2; i++)
             {
                 for (int j = directions.Count - 1; j >= 0; j--)
                 {
@@ -37,11 +39,12 @@ namespace bomberman.classes
                         continue;
                     }
 
-                    positions.Add(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5));
+                    positions.Add(new Tuple<Vector2f, int>(newPos, (2 - i) * 5));
                 }
             }
 
             return positions;
         }
+
     }
 }

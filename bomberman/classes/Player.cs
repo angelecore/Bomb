@@ -14,6 +14,7 @@
         Basic,
         Dynamite,
         Fire,
+        Cluster
     }
 
     public class Player
