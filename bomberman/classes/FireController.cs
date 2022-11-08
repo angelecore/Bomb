@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public class FireController
+    public class FireController : ICloneable
     {
         public Fire fire { get; set; }
         public int BlockX { get; set; }
@@ -21,7 +21,7 @@ namespace bomberman.classes
             this.ID = id;
         }
 
-        public FireController ShallowClone()
+        public object Clone()
         {
             return this.MemberwiseClone() as FireController;
         }

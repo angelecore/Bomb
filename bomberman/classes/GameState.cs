@@ -177,7 +177,7 @@ namespace bomberman.classes
                 var tyle = Grid[pos.Y, pos.X];
                 if (owner.BombType == BombType.Fire)
                 {
-                    FireController clone = fire.ShallowClone();
+                    FireController clone = (FireController) fire.Clone();
                     clone.BlockX = pos.X;
                     clone.BlockY = pos.Y;
                     FireControllerList.Add(clone);
