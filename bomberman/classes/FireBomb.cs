@@ -36,7 +36,8 @@ namespace bomberman.classes
                         directions.RemoveAt(j);
                         continue;
                     }
-
+                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5)))
+                        continue;
                     positions.Add(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5));
                 }
             }
