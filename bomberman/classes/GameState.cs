@@ -103,7 +103,7 @@ namespace bomberman.classes
                 }
 
                 // Every Sixth crate is a bomb change
-                if (responsiblePlayer.Score % 10 == 0)
+                if (responsiblePlayer.Score % 6 == 0)
                 {
                     Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
                     return;
