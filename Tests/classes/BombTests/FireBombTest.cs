@@ -33,8 +33,7 @@ namespace Tests.classes.BombTests
             }
             Bomb bomb = BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
             List<Vector2f> expected = new List<Vector2f>();
-            for(int i =0; i < 4; i++)
-                expected.Add(new Vector2f(3,3));
+            expected.Add(new Vector2f(3,3));
             expected.Add(new Vector2f(4, 3));
             expected.Add(new Vector2f(2, 3));
             expected.Add(new Vector2f(3, 4));
