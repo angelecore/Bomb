@@ -243,7 +243,7 @@ namespace bomberman.classes
                             bool flag = true;
                             if (cell.Item1.Equals(bomb.Position))
                                 continue;
-                            Bomb clone = (ClusterBomb) bomb.Clone(bomb, cell.Item1, bomb.Generation+1);
+                            Bomb clone = (Bomb) bomb.Clone(bomb, cell.Item1, bomb.Generation+1);
                             foreach (var otherBomb in Bombs)
                             {
                                 if (otherBomb.Position.Equals(clone.Position))
@@ -317,7 +317,8 @@ namespace bomberman.classes
                 }
             }
 
-            var bomb = BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
+            var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0);//BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
+            bomb.setExplosion(player.BombType);
             Bombs.Add(bomb);
 
             return bomb;

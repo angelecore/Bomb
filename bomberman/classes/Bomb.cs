@@ -25,11 +25,49 @@ namespace bomberman.classes
             Radius = radius;
             this.Generation = generation;
         }
+        //(Block[,] grid, Func<Vector2f, bool> isPositionValid)
 
-        // Received grid and a lambda function that returns if given position is valid
-        // Returns exploded positions with explosion distance attached to it
-        public abstract List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
+        public List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
+        {
+            return ExplosionAlgoritham.ExplosionPossitions(grid, isPositionValid, this);
+        }
+        public object Clone(Bomb bomb, Vector2f position, int generation)
+        {
+            Bomb temp = new Bomb(position, bomb.Owner, bomb.Radius, generation);
+            temp.Timer = 2f;
+            temp.ExplosionAlgoritham = this.ExplosionAlgoritham;
+            return temp;
+        }
 
-        public abstract object Clone(Bomb bomb, Vector2f position, int generation);
-    }
+        public void setExplosion(BombType type)
+        {
+            //this.ExplosionAlgoritham = explosion;
+            switch (type)
+            {
+                case BombType.Basic:
+                    {
+                        this.ExplosionAlgoritham = new BasicExplosion();
+                        return;
+                    }
+                case BombType.Dynamite:
+                    {
+                        this.ExplosionAlgoritham = new DynamiteExplosion();
+                        return;
+                    }
+                case BombType.Fire:
+                    {
+                        this.ExplosionAlgoritham = new BasicExplosion();
+                        return;
+                    }
+                case BombType.Cluster:
+                    {
+                        this.ExplosionAlgoritham = new ClusterExplosion();
+                        return;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        }
 }
