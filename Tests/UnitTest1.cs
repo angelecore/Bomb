@@ -1,4 +1,5 @@
 using Xunit;
+using bomberman;
 
 namespace Tests
 {
