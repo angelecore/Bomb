@@ -43,6 +43,7 @@ namespace bomberman
             InitializeComponent();
 
             gameState = new GameState(name);
+            gameState.SetForm(this);
             commandResolver = new CommandResolver();
 
             CreateMap();
@@ -356,7 +357,15 @@ namespace bomberman
 
             commandResolver.activate();
         }
+        public void handlebombclonning(Bomb bomb)
+        {
 
+            bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), Properties.Resources.bombSprite);
+            setBombSprites(bombSprites);
+            Controls.AddRange(bombSprites[bomb.Id].GetControls());
+            bombSprites[bomb.Id].BringToFront();
+            //playerSprites[id].BringToFront();
+        }
         private void HandlePlayerJoined(string id, string userName)
         {
             var pos = gameState.AddEnemy(id, userName);
