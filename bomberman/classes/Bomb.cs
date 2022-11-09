@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public abstract class Bomb
+    public class Bomb
     {
         public string Id { get; set; }
         public Vector2f Position { get; set; }
@@ -14,6 +14,7 @@ namespace bomberman.classes
         public int Radius { get; set; }
         public Player Owner { get; set; }
         public int Generation { get; set; }
+        public IExplode ExplosionAlgoritham { get; set; }
 
         public Bomb(Vector2f position, Player owner, int radius, int generation)
         {
