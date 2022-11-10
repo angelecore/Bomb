@@ -7,24 +7,11 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public enum GameStatus
-    {
-        WaitingForPlayers,
-        InProgress,
-        Lost,
-        Tie,
-        Won
-    }
 
     public class GameState
     {
-
-        private GameStatus CurrentGameStatus;
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
-
-        public int Width;
-        public int Height;
 
         public Block[,] Grid;
 
@@ -42,24 +29,25 @@ namespace bomberman.classes
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
-        int maxPlayerCount;
+
         private ConcreteObserver form;
 
         public void SetForm(ConcreteObserver form)
         {
             this.form = form;
         }
+
         public GameState(string playerName, int maxPlayerCount = 2)
         {
             this.PlayerName = playerName;
-            CurrentGameStatus = GameStatus.WaitingForPlayers;
+            GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.WaitingForPlayers);
             LoadMap();
-            this.maxPlayerCount = maxPlayerCount;
+            GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
         public int GetGridIndex(Vector2f position)
         {
-            return position.Y * Width + position.X;
+            return position.Y * GameDataSingleton.GetInstance().Width + position.X;
         }
 
         private void RemoveBox(Player responsiblePlayer, Vector2f position)
@@ -118,29 +106,29 @@ namespace bomberman.classes
             //return;
         }
 
-        public GameStatus CheckGameStatus()
+        public void CheckGameStatus()
         {
-            if (CurrentGameStatus == GameStatus.WaitingForPlayers)
+            var currentGameStatus = GameDataSingleton.GetInstance().CurrentGameStatus;
+            if (currentGameStatus == GameStatus.WaitingForPlayers)
             {
-                if (players.Count == maxPlayerCount)
+                if (players.Count == GameDataSingleton.GetInstance().MaxPlayerCount)
                 {
-                    CurrentGameStatus = GameStatus.InProgress;
+                    GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.InProgress);
                 }
             }
             else
             {
                 if (players.Count == 0)
                 {
-                    CurrentGameStatus = GameStatus.Tie;
+                    GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.Tie);
                 }
 
                 if (players.Count == 1)
                 {
-                    CurrentGameStatus = players.First().Id == PlayerId ? GameStatus.Won : GameStatus.Lost;
+                    GameDataSingleton.GetInstance().SetCurrentGameStatus(players.First().Id == PlayerId ? GameStatus.Won : GameStatus.Lost);
                 }
             }
 
-            return CurrentGameStatus;
         }
        
         public void RemovePlayer(string playerId)
@@ -322,7 +310,11 @@ namespace bomberman.classes
 
             if (player == null) return;
 
-            PlayerMovementFacade playerMovementFacade = new PlayerMovementFacade(player, action, Width, Height, Grid);
+            PlayerMovementFacade playerMovementFacade = new PlayerMovementFacade(
+                player, 
+                action,
+                Grid
+            );
 
             if (!playerMovementFacade.canSetDirection())
             {
@@ -363,7 +355,10 @@ namespace bomberman.classes
 
         public bool IsPositionValid(Vector2f pos)
         {
-            return pos.X >= 0 && pos.Y >= 0 && pos.X <= Width - 1 && pos.Y <= Height - 1;
+            return pos.X >= 0 
+                && pos.Y >= 0 
+                && pos.X <= GameDataSingleton.GetInstance().Width - 1 
+                && pos.Y <= GameDataSingleton.GetInstance().Height - 1;
         }
 
         public void SetPlayerId(string id)
@@ -379,8 +374,7 @@ namespace bomberman.classes
         private void LoadMap()
         {
             var maplayout = Properties.Resources.Level1;
-
-            Height = maplayout.Split("\r\n").Length;
+            GameDataSingleton.GetInstance().SetHeight(maplayout.Split("\r\n").Length);
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
             {
@@ -389,11 +383,12 @@ namespace bomberman.classes
 
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (Width == 0)
+                    if (GameDataSingleton.GetInstance().Width == 0 || Grid == null)
                     {
-                        Width = line.Length;
-                        Grid = new Block[Height, Width];
-                        ExplosionIntensity = new int[Height, Width];
+                        GameDataSingleton.GetInstance().SetWidth(line.Length);
+
+                        Grid = new Block[GameDataSingleton.GetInstance().Height, GameDataSingleton.GetInstance().Width];
+                        ExplosionIntensity = new int[GameDataSingleton.GetInstance().Height, GameDataSingleton.GetInstance().Width];
                     }
 
                     char[] chararray = line.ToArray();

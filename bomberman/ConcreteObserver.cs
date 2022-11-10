@@ -251,11 +251,11 @@ namespace bomberman
             // Create map
             if (blockmap == null)
             {
-                blockmap = new Button[gameState.Grid.GetLength(0), gameState.Grid.GetLength(1)];
+                blockmap = new Button[GameDataSingleton.GetInstance().Height, GameDataSingleton.GetInstance().Width];
 
-                for (int y = 0; y < gameState.Grid.GetLength(0); y++)
+                for (int y = 0; y < GameDataSingleton.GetInstance().Height; y++)
                 {
-                    for (int x = 0; x < gameState.Grid.GetLength(1); x++)
+                    for (int x = 0; x < GameDataSingleton.GetInstance().Width; x++)
                     {
                         var block = gameState.Grid[y, x];
 
@@ -407,8 +407,11 @@ namespace bomberman
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
             stopwatch.Stop();
+            gameState.CheckGameStatus();
 
-            if(gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+            var gameStatus = GameDataSingleton.GetInstance().CurrentGameStatus;
+
+            if (gameStatus == GameStatus.WaitingForPlayers)
             {
                 if (TopLabel == null)
                 {
@@ -451,9 +454,6 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
-           
-            // Check if final game state has been reached
-            var gameStatus = gameState.CheckGameStatus();
 
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))

@@ -35,7 +35,7 @@ namespace bomberman.classes
 
         public void execute()
         {
-            if (gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+            if (GameDataSingleton.GetInstance().CurrentGameStatus == GameStatus.WaitingForPlayers)
             {
                 return;
             }
@@ -46,8 +46,7 @@ namespace bomberman.classes
             form.setBombSprites(bombSprites);
             form.Controls.AddRange(bombSprites[bomb.Id].GetControls());
             bombSprites[bomb.Id].BringToFront();
-            playerSprites[id].BringToFront();
-            
+            playerSprites[id].BringToFront();      
         }
     }
 }

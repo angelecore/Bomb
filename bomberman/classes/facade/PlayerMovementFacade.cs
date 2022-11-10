@@ -20,14 +20,17 @@ namespace bomberman.classes.facade
 
         CheckPositionValid checkPositionValid;
 
-        public PlayerMovementFacade(Player player, string action, int width, int height, Block[,] grid)
+        public PlayerMovementFacade(Player player, string action, Block[,] grid)
         {
             this.direction = Directions.Idle;
             this.player = player;
             this.action = action;
             this.checkPlayerMoving = new CheckPlayerMoving();
             this.checkIsEmptyPath = new CheckIsEmptyPath(grid);
-            this.checkPositionValid = new CheckPositionValid(width, height);
+            this.checkPositionValid = new CheckPositionValid(
+                GameDataSingleton.GetInstance().Width,
+                GameDataSingleton.GetInstance().Height
+            );
         }
 
         public bool canSetDirection()
