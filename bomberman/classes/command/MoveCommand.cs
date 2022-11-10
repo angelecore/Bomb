@@ -28,5 +28,10 @@ namespace bomberman.classes
 
             gameState.PerformAction(playerId, direction);
         }
+
+        public void undo()
+        {
+            return;
+        }
     }
 }
