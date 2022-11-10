@@ -31,11 +31,11 @@ namespace bomberman.server
             // send logs
             if (e.Data.Contains("Endgame"))
             {
-                Send(String.Format("Logs {0}", JsonConvert.SerializeObject(_gameNetwork.GetAllEvents())));
+                Send(String.Format("Logs {0}", JsonConvert.SerializeObject(LogsSingleton.GetInstance().All())));
                 return;
             }
 
-            _gameNetwork.AddNewEvent(e.Data);
+            LogsSingleton.GetInstance().Add(e.Data);
 
             if (e.Data.Contains("Connected"))
             {

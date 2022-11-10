@@ -11,7 +11,6 @@ namespace bomberman.server
     {
         WebSocketServer server = new WebSocketServer("ws://127.0.0.1:7980");
         private Dictionary<string, Observer> Observers;
-        private List<string> Events;
 
         public Subject()
         {
@@ -19,7 +18,6 @@ namespace bomberman.server
             server.AddWebSocketService("/Server", () => new Observer(this));
 
             Observers = new Dictionary<string, Observer>();
-            Events = new List<string>();
         }
 
         public Dictionary<string, Observer> GetAllObservers()
@@ -38,16 +36,6 @@ namespace bomberman.server
         public void Attach(Observer observer)
         {
             Observers.Add(observer.SocketId, observer);
-        }
-
-        public void AddNewEvent(string userEvent) 
-        {
-            Events.Add(userEvent);
-        }
-
-        public List<string> GetAllEvents()
-        {
-            return Events;
         }
 
         public void Run()
