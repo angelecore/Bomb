@@ -1,4 +1,4 @@
-﻿//using System;
+//using System;
 //using System.Collections.Generic;
 //using System.Linq;
 //using System.Text;
@@ -38,7 +38,8 @@
 //                        directions.RemoveAt(j);
 //                        continue;
 //                    }
-
+//                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5)))
+//                        continue;
 //                    positions.Add(new Tuple<Vector2f, int>(newPos, (2 - i) * 5));
 //                }
 //            }

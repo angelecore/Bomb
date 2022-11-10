@@ -30,13 +30,15 @@
 //                    var vector = Utils.MultiplyVector(Utils.GetDirectionVector(dir), i);
 //                    var newPos = Utils.AddVectors(Position, vector);
 
+
 //                    // If the position is not valid or the block is indestructable - stop
-//                    if (!isPositionValid(newPos) || grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
+//                   if (!isPositionValid(newPos) || grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
 //                    {
 //                        directions.RemoveAt(j);
 //                        continue;
 //                    }
-
+//                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5)))
+//                        continue;
 //                    positions.Add(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5));
 //                }
 //            }
