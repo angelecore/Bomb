@@ -35,6 +35,12 @@ namespace bomberman.server
                 return;
             }
 
+            if (e.Data.Contains("UndoLogs"))
+            {
+                Send(String.Format("UndoLogs {0}", e.Data));
+                return;
+            }
+
             LogsSingleton.GetInstance().Add(e.Data);
 
             if (e.Data.Contains("Connected"))

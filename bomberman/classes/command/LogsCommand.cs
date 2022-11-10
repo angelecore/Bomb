@@ -8,21 +8,19 @@ namespace bomberman.classes
 {
     public class LogsCommand : ICommand
     {
-        GameState gameState;
         List<string> logs;
+        string filePath;
 
-        public LogsCommand(GameState gameState, List<string> logs)
+        public LogsCommand(List<string> logs, string filePath)
         {
-            this.gameState = gameState;
             this.logs = logs;
+            this.filePath = filePath;
         }
 
         public void execute()
         {
             using (
-                FileStream fs = File.Create(
-                    string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName)
-                )
+                FileStream fs = File.Create(filePath)
             ) {
                 using (var fw = new StreamWriter(fs))
                 {
@@ -33,6 +31,11 @@ namespace bomberman.classes
                     }
                 }
             }
+        }
+
+        public void undo()
+        {
+            File.Delete(filePath);
         }
     }
 }
