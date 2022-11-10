@@ -49,5 +49,10 @@ namespace bomberman.classes
             playerSprites[id].BringToFront();
             
         }
+
+        public void undo()
+        {
+            return;
+        }
     }
 }

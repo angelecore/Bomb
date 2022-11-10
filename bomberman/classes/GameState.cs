@@ -329,14 +329,14 @@ namespace bomberman.classes
 
             if (player == null) return;
 
-            PlayerMovementFacade playerMovementFacade = new PlayerMovementFacade(player, action, Width, Height, Grid);
+            PlayerMovementFacade playerMovementFacade = new PlayerMovementFacade(player, action, Width, Height, Grid, this);
 
-            if (!playerMovementFacade.canSetDirection())
+            if (playerMovementFacade.canSetDirection())
             {
-                return;
+                playerMovementFacade.movePlayer();
             }
 
-            var newDirection = playerMovementFacade.getNewDirection();
+            /*var newDirection = playerMovementFacade.getNewDirection();
 
             // if the player was already moving, then update its position
             if (player.Direction != Directions.Idle && player.Direction != newDirection)
@@ -344,7 +344,7 @@ namespace bomberman.classes
                 MovePlayer(player);
             }
 
-            player.SetDirection(newDirection);
+            player.SetDirection(newDirection);*/
         }
 
         public void MovePlayer(Player player)
