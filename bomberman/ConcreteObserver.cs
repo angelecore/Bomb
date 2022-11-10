@@ -7,7 +7,7 @@ using WebSocketSharp;
 
 namespace bomberman
 {
-    public partial class Form1 : Form
+    public partial class ConcreteObserver : Form
     {
         private WebSocket? ws;
 
@@ -38,7 +38,7 @@ namespace bomberman
         private Stopwatch stopwatch = new Stopwatch();
 
         CommandResolver commandResolver;
-        public Form1(string name)
+        public ConcreteObserver(string name)
         {
             InitializeComponent();
 

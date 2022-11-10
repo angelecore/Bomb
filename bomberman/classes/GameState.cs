@@ -43,9 +43,9 @@ namespace bomberman.classes
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
         int maxPlayerCount;
-        private Form1 form;
+        private ConcreteObserver form;
 
-        public void SetForm(Form1 form)
+        public void SetForm(ConcreteObserver form)
         {
             this.form = form;
         }
@@ -109,17 +109,10 @@ namespace bomberman.classes
                     return;
                 }
 
-                // Every 5th crate is a speed power up
-                if (responsiblePlayer.Score % 5 == 0)
+                IPowerup ?newPowerup = PowerupFactory.GetPowerupInstance(responsiblePlayer.Score);
+                if (newPowerup != null)
                 {
-                    Powerups.Add(gridIndex, new SpeedPowerupStrategy());
-                    return;
-                }
-
-                // Every third crate is a power up
-                if (responsiblePlayer.Score % 3 == 0)
-                {
-                    Powerups.Add(gridIndex, new AddBombRadiusStrategy());
+                    Powerups.Add(gridIndex, newPowerup);
                 }
             }
             //return;

@@ -1,6 +1,6 @@
 ﻿namespace bomberman
 {
-    partial class Form1
+    partial class ConcreteObserver
     {
         /// <summary>
         ///  Required designer variable.

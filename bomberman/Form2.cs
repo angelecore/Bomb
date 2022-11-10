@@ -40,7 +40,7 @@ namespace bomberman
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Utils.NewFormOnTop(this, new Form1(textBox1.Text));
+            Utils.NewFormOnTop(this, new ConcreteObserver(textBox1.Text));
         }
 
         private static void Ws_OnMessage(object sender, MessageEventArgs e)
