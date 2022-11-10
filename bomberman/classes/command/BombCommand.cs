@@ -11,7 +11,7 @@ namespace bomberman.classes
     {
         GameState gameState;
 
-        Form1 form;
+        ConcreteObserver form;
 
         Dictionary<string, PlayerModel> playerSprites;
 
@@ -21,7 +21,7 @@ namespace bomberman.classes
 
         public BombCommand(
             GameState gameState,
-            Form1 form,
+            ConcreteObserver form,
             Dictionary<string, PlayerModel> playerSprites,
             Dictionary<string, BombModel> bombSprites,
             string id
