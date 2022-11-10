@@ -1,4 +1,5 @@
 using bomberman.classes;
+using bomberman.classes.adapter;
 using bomberman.classes.decorator;
 using bomberman.client;
 using Newtonsoft.Json;
@@ -351,7 +352,7 @@ namespace bomberman
                     break;
                 case "Logs":
                     var logs = JsonConvert.DeserializeObject<List<string>>(value);
-                    commandResolver.setCommand(new LogsCommand(gameState, logs));
+                    commandResolver.setCommand(new LogsCommand(gameState, logs, new LogsJsonAdapter()));
                     break;
             }
 

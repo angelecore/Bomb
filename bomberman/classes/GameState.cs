@@ -1,4 +1,5 @@
-﻿using bomberman.classes.facade;
+﻿using bomberman.classes.adapter;
+using bomberman.classes.facade;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace bomberman.classes
 
     public class GameState
     {
+      
 
         private GameStatus CurrentGameStatus;
         public string PlayerName { get; set; }
@@ -226,7 +228,6 @@ namespace bomberman.classes
                         FireList.Add(fire);
                     }
                     Bombs.RemoveAt(i);
-                    Console.WriteLine(cells.GetType());
                     RemoveExplodedTiles(cells, bomb.Owner, controller);
                     explodedBombs.Add(bomb);
                     if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)

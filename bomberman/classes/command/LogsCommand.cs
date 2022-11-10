@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.adapter;
+using Newtonsoft.Json;
 
 namespace bomberman.classes
 {
@@ -10,29 +12,19 @@ namespace bomberman.classes
     {
         GameState gameState;
         List<string> logs;
+        ILogger adapter;
 
-        public LogsCommand(GameState gameState, List<string> logs)
+
+        public LogsCommand(GameState gameState, List<string> logs, ILogger adapter)
         {
             this.gameState = gameState;
             this.logs = logs;
+            this.adapter = adapter;
         }
 
         public void execute()
         {
-            using (
-                FileStream fs = File.Create(
-                    string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName)
-                )
-            ) {
-                using (var fw = new StreamWriter(fs))
-                {
-                    foreach (var log in logs)
-                    {
-                        fw.WriteLine(log);
-                        fw.Flush();
-                    }
-                }
-            }
+            adapter.output(logs, gameState.PlayerName);
         }
     }
 }

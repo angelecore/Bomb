@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace bomberman.server
+namespace bomberman.classes.adapter
 {
-    internal class Logger
+    public interface ILogger
     {
+        public void output(List<string> logs, string username);
     }
 }
