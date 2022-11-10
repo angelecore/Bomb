@@ -30,7 +30,6 @@ namespace bomberman.classes
                     {
                         continue;
                     }
-
                     positions.Add(new Tuple<Vector2f, int>(newPos, bomb.Radius * 2));
                 }
             }
@@ -60,7 +59,8 @@ namespace bomberman.classes
                         directions.RemoveAt(j);
                         continue;
                     }
-
+                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5)))
+                        continue;
                     positions.Add(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5));
                 }
             }
@@ -91,7 +91,8 @@ namespace bomberman.classes
                         directions.RemoveAt(j);
                         continue;
                     }
-
+                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5)))
+                        continue;
                     positions.Add(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5));
                 }
             }
@@ -122,7 +123,8 @@ namespace bomberman.classes
                         directions.RemoveAt(j);
                         continue;
                     }
-
+                    if (positions.Contains(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5)))
+                        continue;
                     positions.Add(new Tuple<Vector2f, int>(newPos, (2 - i) * 5));
                 }
             }
