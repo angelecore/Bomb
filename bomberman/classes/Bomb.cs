@@ -56,7 +56,7 @@ namespace bomberman.classes
                     }
                 case BombType.Fire:
                     {
-                        this.ExplosionAlgoritham = new BasicExplosion();
+                        this.ExplosionAlgoritham = new FireExplosion();
                         return;
                     }
                 case BombType.Cluster:

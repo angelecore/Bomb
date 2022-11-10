@@ -70,6 +70,37 @@ namespace bomberman.classes
 
     }
 
+    class FireExplosion : IExplode
+    {
+        public List<Tuple<Vector2f, int>> ExplosionPossitions(Block[,] grid, Func<Vector2f, bool> isPositionValid, Bomb bomb)
+        {
+            var positions = new List<Tuple<Vector2f, int>>();
+
+            var directions = new List<Directions>() { Directions.Up, Directions.Down, Directions.Left, Directions.Right };
+            for (int i = 0; i < bomb.Radius*2; i++)
+            {
+                for (int j = directions.Count - 1; j >= 0; j--)
+                {
+                    var dir = directions[j];
+                    var vector = Utils.MultiplyVector(Utils.GetDirectionVector(dir), i);
+                    var newPos = Utils.AddVectors(bomb.Position, vector);
+
+                    // If the position is not valid or the block is indestructable - stop
+                    if (!isPositionValid(newPos) || grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
+                    {
+                        directions.RemoveAt(j);
+                        continue;
+                    }
+
+                    positions.Add(new Tuple<Vector2f, int>(newPos, (bomb.Radius - i) * 5));
+                }
+            }
+
+            return positions;
+        }
+
+    }
+
     class ClusterExplosion : IExplode
     {
         public List<Tuple<Vector2f, int>> ExplosionPossitions(Block[,] grid, Func<Vector2f, bool> isPositionValid, Bomb bomb)
