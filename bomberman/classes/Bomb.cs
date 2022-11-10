@@ -31,9 +31,9 @@ namespace bomberman.classes
         {
             return ExplosionAlgoritham.ExplosionPossitions(grid, isPositionValid, this);
         }
-        public object Clone(Bomb bomb, Vector2f position, int generation)
+        public object Clone(Vector2f position, int generation)
         {
-            Bomb temp = new Bomb(position, bomb.Owner, bomb.Radius, generation);
+            Bomb temp = new Bomb(position, this.Owner, this.Radius, generation);
             temp.Timer = 2f;
             temp.ExplosionAlgoritham = this.ExplosionAlgoritham;
             return temp;

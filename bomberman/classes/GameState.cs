@@ -236,7 +236,7 @@ namespace bomberman.classes
                             bool flag = true;
                             if (cell.Item1.Equals(bomb.Position))
                                 continue;
-                            Bomb clone = (Bomb) bomb.Clone(bomb, cell.Item1, bomb.Generation+1);
+                            Bomb clone = (Bomb) bomb.Clone(cell.Item1, bomb.Generation+1);
                             foreach (var otherBomb in Bombs)
                             {
                                 if (otherBomb.Position.Equals(clone.Position))
@@ -249,7 +249,6 @@ namespace bomberman.classes
                                 Bombs.Add(clone);
                                 form.handlebombclonning(clone);
                             }
-                            Console.WriteLine(clone.Id);
                         }
                     }
                 }
