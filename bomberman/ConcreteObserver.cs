@@ -292,6 +292,9 @@ namespace bomberman
             } else if (powerup is SpeedPowerupStrategy)
             {
                 sprite = Properties.Resources.speedPowerupIcon;
+            } else if (powerup is FreezeSpeedPowerupStrategy)
+            {
+                sprite = Properties.Resources.freezePowerup;
             }
 
             var powerupModel = new PowerupModel(

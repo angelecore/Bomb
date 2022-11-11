@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    internal class AddBombRadiusStrategy : IPowerup
+    public class FreezeSpeedPowerupStrategy : IPowerup
     {
         public void ApplyPowerUp(GameState gameState, Player player)
         {
             player.AddNewStat(new PlayerStatsBuilder()
-                .WithRadius(1)
+                .WithAddSpeed(-10)
+                .WithTimer(5)
                 .Build()
-
             );
         }
     }
