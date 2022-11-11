@@ -9,14 +9,10 @@ namespace bomberman.server
 {
     public class Subject
     {
-        WebSocketServer server = new WebSocketServer("ws://127.0.0.1:7980");
-        private Dictionary<string, Observer> Observers;
+        protected Dictionary<string, Observer> Observers;
 
         public Subject()
         {
-            server = new WebSocketServer("ws://127.0.0.1:7980");
-            server.AddWebSocketService("/Server", () => new Observer(this));
-
             Observers = new Dictionary<string, Observer>();
         }
 
@@ -33,22 +29,20 @@ namespace bomberman.server
             }
         }
 
+        public void NotifyOne(string observerId, string data)
+        {
+            Observers[observerId].Update(data);
+        }
+
         public void Attach(Observer observer)
         {
             Observers.Add(observer.SocketId, observer);
         }
 
-        public void Run()
+        public void Detach(Observer observer)
         {
-            server.Start();
-
-            if (server.IsListening)
-            {
-                Console.WriteLine("Listening on port {0}, and providing WebSocket services:", server.Port);
-
-                foreach (var path in server.WebSocketServices.Paths)
-                    Console.WriteLine("- {0}", path);
-            }
+            Observers.Remove(observer.SocketId);
         }
+
     }
 }
