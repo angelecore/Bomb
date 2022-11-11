@@ -8,7 +8,7 @@ namespace bomberman.classes.adapter
 {
     public class LogsPlainText
     {
-        public void output(List<string> logs, string username)
+        public void outputPlain(List<string> logs, string username)
         {
             using (
                 FileStream fs = File.Create(

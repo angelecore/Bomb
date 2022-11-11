@@ -9,7 +9,7 @@ namespace bomberman.classes.adapter
 {
     public class LogsJson
     {
-        public void output(List<string> logs, string username)
+        public void outputJson(List<string> logs, string username)
         {
             using (
                 FileStream fs = File.Create(

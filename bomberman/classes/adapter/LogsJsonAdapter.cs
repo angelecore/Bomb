@@ -11,7 +11,7 @@ namespace bomberman.classes.adapter
         LogsJson adaptee = new LogsJson();
         public void output(List<string> logs, string username)
         {
-            adaptee.output(logs, username);
+            adaptee.outputJson(logs, username);
         }
     }
 }

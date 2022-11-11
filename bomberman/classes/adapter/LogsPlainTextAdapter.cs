@@ -13,7 +13,7 @@ namespace bomberman.classes.adapter
 
         public void output(List<string> logs, string username)
         {
-            adaptee.output(logs, username);
+            adaptee.outputPlain(logs, username);
         }
     }
 }
