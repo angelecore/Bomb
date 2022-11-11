@@ -27,6 +27,12 @@ namespace bomberman.server
                 return;
             }
 
+            if (message.Contains("UndoLogs"))
+            {
+                NotifyOne(observerId, String.Format("UndoLogs {0}", message));
+                return;
+            }
+
             LogsSingleton.GetInstance().Add(message);
 
             if (message.Contains("Connected"))
