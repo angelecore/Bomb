@@ -38,7 +38,7 @@ namespace bomberman
         {
             ApplicationConfiguration.Initialize();
             
-            new Subject()
+            new ConcreteSubject()
                 .Run();
 
 

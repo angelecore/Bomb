@@ -7,7 +7,7 @@ using WebSocketSharp;
 
 namespace bomberman
 {
-    public partial class Form1 : Form
+    public partial class ConcreteObserver : Form
     {
         private WebSocket? ws;
 
@@ -25,6 +25,8 @@ namespace bomberman
 
         private Label TopLabel;
 
+        private string filePath;
+
         private Dictionary<BlockType, Color> BlockColors = new Dictionary<BlockType, Color>() 
         {
             { BlockType.Empty, Color.LightGray },
@@ -38,13 +40,14 @@ namespace bomberman
         private Stopwatch stopwatch = new Stopwatch();
 
         CommandResolver commandResolver;
-        public Form1(string name)
+        public ConcreteObserver(string name)
         {
             InitializeComponent();
 
             gameState = new GameState(name);
             gameState.SetForm(this);
             commandResolver = new CommandResolver();
+            filePath = string.Format("{0}-logs.txt", gameState.PlayerName);
 
             CreateMap();
 
@@ -251,11 +254,11 @@ namespace bomberman
             // Create map
             if (blockmap == null)
             {
-                blockmap = new Button[gameState.Grid.GetLength(0), gameState.Grid.GetLength(1)];
+                blockmap = new Button[GameDataSingleton.GetInstance().Height, GameDataSingleton.GetInstance().Width];
 
-                for (int y = 0; y < gameState.Grid.GetLength(0); y++)
+                for (int y = 0; y < GameDataSingleton.GetInstance().Height; y++)
                 {
-                    for (int x = 0; x < gameState.Grid.GetLength(1); x++)
+                    for (int x = 0; x < GameDataSingleton.GetInstance().Width; x++)
                     {
                         var block = gameState.Grid[y, x];
 
@@ -344,18 +347,23 @@ namespace bomberman
                     break;
                 case "Move":
                     var split2 = value.Split(" ");
-                    commandResolver.setCommand(new MoveCommand(gameState, split2[0], split2[1]));
+                    commandResolver.setCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
                     break;
                 case "Bomb":
-                    commandResolver.setCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value));
+                    commandResolver.setCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
                     break;
                 case "Logs":
+                    filePath = string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName);
                     var logs = JsonConvert.DeserializeObject<List<string>>(value);
-                    commandResolver.setCommand(new LogsCommand(gameState, logs));
+                    commandResolver.setCommand(new LogsCommand(logs, filePath), true);
+                    break;
+                case "UndoLogs":
+                    commandResolver.setCommand(new LogsCommand(null, filePath), false);
                     break;
             }
 
             commandResolver.activate();
+            commandResolver.clearCommand();
         }
         public void handlebombclonning(Bomb bomb)
         {
@@ -407,8 +415,11 @@ namespace bomberman
         private void MovementTimer_Tick(object sender, EventArgs e)
         {
             stopwatch.Stop();
+            gameState.CheckGameStatus();
 
-            if(gameState.CheckGameStatus() == GameStatus.WaitingForPlayers)
+            var gameStatus = GameDataSingleton.GetInstance().CurrentGameStatus;
+
+            if (gameStatus == GameStatus.WaitingForPlayers)
             {
                 if (TopLabel == null)
                 {
@@ -451,9 +462,6 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
-           
-            // Check if final game state has been reached
-            var gameStatus = gameState.CheckGameStatus();
 
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))
@@ -474,7 +482,7 @@ namespace bomberman
                     text = "It's a tie";
                 }
 
-                Utils.NewFormOnTop(this, new EndGameForm(text));
+                Utils.NewFormOnTop(this, new EndGameForm(text, ws));
             }
 
             stopwatch.Restart();

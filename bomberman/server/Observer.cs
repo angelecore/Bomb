@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +14,11 @@ namespace bomberman.server
         public string SocketId { get; set; }
         public string UserName { get; set; }
 
-        private Subject _gameNetwork;
+        private ConcreteSubject _subject;
         
-        public Observer(Subject gameNetwork)
+        public Observer(ConcreteSubject subject)
         {
-            _gameNetwork = gameNetwork;
+            _subject = subject;
         }
 
         public void Update(string data)
@@ -28,41 +28,8 @@ namespace bomberman.server
 
         protected override void OnMessage(MessageEventArgs e)
         {
-            // send logs
-            if (e.Data.Contains("Endgame"))
-            {
-                Send(String.Format("Logs {0}", JsonConvert.SerializeObject(_gameNetwork.GetAllEvents())));
-                return;
-            }
-
-            _gameNetwork.AddNewEvent(e.Data);
-
-            if (e.Data.Contains("Connected"))
-            {
-                string userName = e.Data.Split(' ')[1];
-
-                var users = _gameNetwork.GetAllObservers();
-                foreach (var p in Sessions.ActiveIDs.ToArray().SubArray(0, Sessions.ActiveIDs.Count() - 1))
-                {
-                    Send(string.Format("Joined {0} {1}", p.ToString(), users[p.ToString()].UserName));
-                }
-
-
-                this.SocketId = Sessions.ActiveIDs.Last();
-                this.UserName = userName;
-
-                _gameNetwork.Attach(this);
-                
-                // the user itself only needs to know of it's session id.
-                Send(string.Format("Connected {0}", Sessions.ActiveIDs.Last()));
-
-                _gameNetwork.Notify(string.Format("Joined {0} {1}", Sessions.ActiveIDs.Last(), userName));
-               // Sessions.Broadcast();
-            }
-            else
-            {
-                Sessions.Broadcast(e.Data);
-            }
+            SocketId = Sessions.ActiveIDs.Last();
+            _subject.SetState(this, e.Data);
         }
     }
 }
