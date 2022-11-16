@@ -30,7 +30,6 @@
 //                    var vector = Utils.MultiplyVector(Utils.GetDirectionVector(dir), i);
 //                    var newPos = Utils.AddVectors(Position, vector);
 
-
 //                    // If the position is not valid or the block is indestructable - stop
 //                   if (!isPositionValid(newPos) || grid[newPos.Y, newPos.X].Type == BlockType.InDestructable)
 //                    {

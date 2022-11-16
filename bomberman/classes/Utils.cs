@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    static class Utils
+    public static class Utils
     {
         public static void NewFormOnTop(Form window, Form newForm)
         {

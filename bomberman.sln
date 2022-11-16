@@ -5,6 +5,8 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "bomberman", "bomberman\bomberman.csproj", "{FD7617B6-29F0-4AA6-A0D2-BAC7B974D076}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{F66926DA-970A-4DF0-A014-0A8DC0007133}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FD7617B6-29F0-4AA6-A0D2-BAC7B974D076}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD7617B6-29F0-4AA6-A0D2-BAC7B974D076}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD7617B6-29F0-4AA6-A0D2-BAC7B974D076}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F66926DA-970A-4DF0-A014-0A8DC0007133}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F66926DA-970A-4DF0-A014-0A8DC0007133}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F66926DA-970A-4DF0-A014-0A8DC0007133}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F66926DA-970A-4DF0-A014-0A8DC0007133}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
