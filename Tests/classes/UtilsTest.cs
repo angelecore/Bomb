@@ -27,5 +27,11 @@ namespace Tests.classes
             Assert.Equal(vector2, Utils.MultiplyVector(vector1Mock.Object, 3));
         }
 
+        [Fact]
+        public void testGetDirectionVectorReturnsZeroVectorOnIdleDirection()
+        {
+            var vector2 = new Vector2f(0, 0);
+            Assert.Equal(vector2, Utils.GetDirectionVector(Directions.Idle));
+        }
     }
 }
