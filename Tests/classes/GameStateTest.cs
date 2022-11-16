@@ -127,5 +127,54 @@ namespace Tests.classes
 
         }
 
+        [Fact]
+        public void test_AddOwner_replace()
+        {
+            GameState gameState = new GameState("Replacable");
+            Player TestPlayer = new Player("TestId", "TestName", new Vector2f(1, 1));
+            gameState.AddOwner("TestId");
+            Assert.Equal("TestId",gameState.PlayerId);
+
+        }
+
+        [Fact]
+        public void test_GetOwnerPlayer_Equals()
+        {
+            Player Owner = new Player("TestId","TestName",new Vector2f(1,1));
+            GameState gameState = new GameState(Owner.Name);
+            gameState.AddOwner(Owner.Id);
+            var real = gameState.GetOwnerPlayer();
+            Assert.Equal(Owner.Id,real.Id);
+        }
+
+        [Fact]
+        public void test_PlaceBomb_InvalidPlayerId()
+        {
+            Player Test = new Player("TestId","TestName",new Vector2f(1,1));
+            GameState gameState = new GameState(Test.Name);
+            var real = gameState.PlaceBomb("null");
+            Assert.Null(real);
+        }
+
+        [Fact]
+        public void test_PlaceBomb_TwoBombInSameSpot()
+        {
+            Player Test = new Player("TestId", "TestName", new Vector2f(1, 1));
+            GameState gameState = new GameState(Test.Name);
+            gameState.AddOwner(Test.Id);
+            gameState.PlaceBomb(Test.Id);
+            var real = gameState.PlaceBomb(Test.Id);
+            Assert.Null(real);
+        }
+
+        [Fact]
+        public void test_PlaceBomb_Valid()
+        {
+            Player Test = new Player("TestId", "TestName", new Vector2f(1, 1));
+            GameState gameState = new GameState(Test.Name);
+            gameState.AddOwner(Test.Id);
+            var real = gameState.PlaceBomb(Test.Id);
+            Assert.NotNull(real);
+        }
     }
 }
