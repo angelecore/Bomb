@@ -367,6 +367,11 @@ namespace bomberman.classes
             return Bombs.FindAll(bomb => bomb.Owner.Id == id);
         }
 
+        public void setGameStatus(GameStatus gameStatus)
+        {
+            GameDataSingleton.GetInstance().SetCurrentGameStatus(gameStatus);
+        }
+
         private void LoadMap()
         {
             var maplayout = Properties.Resources.Level1;
