@@ -24,7 +24,10 @@ namespace bomberman.classes
         private List<Vector2f> possiblePlayerPos = new List<Vector2f>();
 
         private List<Player> players = new List<Player>();
+
         public List<Bomb> Bombs = new List<Bomb>();
+
+        public List<object> scoreEvents = new List<object>();
 
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
@@ -59,7 +62,7 @@ namespace bomberman.classes
             bool flag = false;
             if(cell.Type != BlockType.Empty)
             {
-                responsiblePlayer.Score++;
+                scoreEvents.Add(BlockType.Empty);
                 flag = true;
             }
             cell.Type = BlockType.Empty;
@@ -331,6 +334,7 @@ namespace bomberman.classes
         public void MovePlayer(Player player)
         {
             player.Move();
+            scoreEvents.Add(Constants.SCORE_STRATEGY_MOVEMENT);
 
             int gridIndex = GetGridIndex(player.Position);
             var cell = Grid[player.Position.Y,player.Position.X];
@@ -340,6 +344,7 @@ namespace bomberman.classes
             if (Powerups.ContainsKey(gridIndex))
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
+                scoreEvents.Add(Powerups[gridIndex]);
                 Powerups.Remove(gridIndex);
             }
             if (Bombtypes.ContainsKey(gridIndex))

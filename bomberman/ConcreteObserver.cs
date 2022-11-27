@@ -1,4 +1,5 @@
 using bomberman.classes;
+using bomberman.classes.COR;
 using bomberman.classes.decorator;
 using bomberman.classes.interpreter;
 using bomberman.client;
@@ -44,6 +45,8 @@ namespace bomberman
 
         private Interpreter interpreter;
 
+        private DestroyedBlockScoreHandler destroyedBlockScoreHandler;
+
         public ConcreteObserver(string name)
         {
             InitializeComponent();
@@ -52,6 +55,7 @@ namespace bomberman
             gameState.SetForm(this);
             commandResolver = new CommandResolver();
             interpreter = new Interpreter(this);
+            destroyedBlockScoreHandler = new DestroyedBlockScoreHandler();
             filePath = string.Format("{0}-logs.txt", gameState.PlayerName);
 
             CreateMap();
@@ -100,6 +104,7 @@ namespace bomberman
 
             SetBaseInvetoryStats(new string[]
             {
+                String.Format("Score: {0}", ownerPlayer.Score),
                 String.Format("Name: {0}", ownerPlayer?.Name),
                 String.Format("Position: {0}", ownerPlayer?.Position),
                 String.Format("Speed: {0}", ownerPlayer?.PlayerSpeed),
@@ -254,6 +259,18 @@ namespace bomberman
             }
         }
 
+        public void updateScore()
+        {
+            destroyedBlockScoreHandler.setNext(new PowerupScoreHandler()).setNext(new PowerupPickupScoreHandler()).setNext(new MovementScoreHandler());
+
+            foreach (var scoreEvent in gameState.scoreEvents)
+            {
+                destroyedBlockScoreHandler.Handle(scoreEvent, gameState.GetOwnerPlayer());
+            }
+
+            gameState.scoreEvents.Clear();
+        }
+
         public void CreateMap()
         {
             // Create map
@@ -291,12 +308,18 @@ namespace bomberman
         public void CreatePowerupModel(Vector2f position, IPowerup powerup)
         {
             Bitmap sprite = null;
-            if (powerup is AddBombRadiusStrategy)
+
+            switch (powerup)
             {
-                sprite = Properties.Resources.bombRadiusPowerup;
-            } else if (powerup is SpeedPowerupStrategy)
-            {
-                sprite = Properties.Resources.speedPowerupIcon;
+                case AddBombRadiusStrategy:
+                    sprite = Properties.Resources.bombRadiusPowerup;
+                    break;
+                case SpeedPowerupStrategy:
+                    sprite = Properties.Resources.speedPowerupIcon;
+                    break;
+                case ScorePowerupStrategy:
+                    sprite = Properties.Resources.scorePowerupIcon;
+                    break;
             }
 
             var powerupModel = new PowerupModel(
@@ -473,6 +496,8 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
+
+            updateScore();
 
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))

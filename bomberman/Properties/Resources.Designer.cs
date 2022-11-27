@@ -122,6 +122,16 @@ namespace bomberman.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap scorePowerupIcon {
+            get {
+                object obj = ResourceManager.GetObject("scorePowerupIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap speedPowerupIcon {
             get {
                 object obj = ResourceManager.GetObject("speedPowerupIcon", resourceCulture);
