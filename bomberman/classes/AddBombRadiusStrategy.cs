@@ -13,7 +13,6 @@ namespace bomberman.classes
             player.AddNewStat(new PlayerStatsBuilder()
                 .WithRadius(1)
                 .Build()
-
             );
         }
     }
