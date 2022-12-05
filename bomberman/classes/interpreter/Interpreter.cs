@@ -45,7 +45,6 @@ namespace bomberman.classes.interpreter
                     break;
                 case "WIN":
                     getGameStateOfPlayer(splitCommands[1]).setGameStatus(GameStatus.Won);
-                    getGameStateOfPlayer(splitCommands[1], true).setGameStatus(GameStatus.Lost);
 
                     break;
                 case "SPEED":

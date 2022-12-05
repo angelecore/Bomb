@@ -15,7 +15,7 @@ namespace bomberman.classes
         Won
     }
 
-    internal class GameDataSingleton
+    public class GameDataSingleton
     {
         public GameStatus CurrentGameStatus;
         public int Width { get; set; }
