@@ -1,4 +1,5 @@
 ﻿using bomberman.classes.facade;
+using bomberman.classes.memento;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +36,11 @@ namespace bomberman.classes
 
         private ConcreteObserver form;
 
+        // key is the player id
+        // each player will have a seperate player snapshot manager
+        public Dictionary<string, PlayerSnapshotManager> PlayerSnapshots = new Dictionary<string, PlayerSnapshotManager>();
+
+        private float secondTimer = 1.0f;
         public void SetForm(ConcreteObserver form)
         {
             this.form = form;
@@ -51,6 +57,31 @@ namespace bomberman.classes
         public int GetGridIndex(Vector2f position)
         {
             return position.Y * GameDataSingleton.GetInstance().Width + position.X;
+        }
+
+        public void ActivateReverseMode(Player initiator)
+        {
+            var affectedPlayer = players.SingleOrDefault(p => p.Id != initiator.Id);
+            if (affectedPlayer == null)
+            {
+                return;
+            }
+
+            PlayerSnapshot ?lastSnapshot = null;
+            for (int i = 0; i < 5; i++)
+            {
+                var snapshot = PlayerSnapshots[affectedPlayer.Id].PopLastSnapshot();
+                if (snapshot != null)
+                {
+                    lastSnapshot = snapshot;
+                }
+            }
+
+            if (lastSnapshot != null)
+            {
+                affectedPlayer.ApplySnapshot(lastSnapshot);
+                form.SetPlayerPosition(affectedPlayer.Id, affectedPlayer.Position);
+            }
         }
 
         private void RemoveBox(Player responsiblePlayer, Vector2f position)
@@ -146,12 +177,32 @@ namespace bomberman.classes
                 .ToList();
         }
 
-        public void UpdateTick(float miliSeconds)
+        public void UpdateTick(float miliSecondsPassed)
         {
-            foreach(var player in players)
+            bool takeSnapshot = false;
+            secondTimer -= miliSecondsPassed * 0.001f;
+            if (secondTimer <= 0)
             {
-                player.UpdateTemporaryStats(miliSeconds);
+                takeSnapshot = true;
+                secondTimer = 1.0f;
             }
+
+            foreach (var player in players)
+            {
+                player.UpdateTemporaryStats(miliSecondsPassed);
+
+                if (takeSnapshot)
+                {
+                    if (!PlayerSnapshots.ContainsKey(player.Id))
+                    {
+                        PlayerSnapshots.Add(player.Id, new PlayerSnapshotManager());
+                    }
+
+                    PlayerSnapshots[player.Id].AddSnapshot(player.SnapshotPlayerInfo());
+                }
+            }
+
+
         }
 
         public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, FireController fire)
@@ -274,6 +325,11 @@ namespace bomberman.classes
         public Player? GetOwnerPlayer()
         {
             return players.SingleOrDefault(p => p.Id == PlayerId);
+        }
+
+        public Player? GetEnemyPlayer()
+        {
+            return players.SingleOrDefault(p => p.Id != PlayerId);
         }
 
         public List<Player> GetMovingPlayers()

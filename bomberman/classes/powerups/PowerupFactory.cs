@@ -30,6 +30,10 @@ namespace bomberman.classes
                 return new AddBombRadiusStrategy();
             }
 
+            if (playerScore % 4 == 0)
+            {
+                return new ReversePowerupStrategy();
+            }
             return null;
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace bomberman.classes
+﻿using bomberman.classes.memento;
+
+namespace bomberman.classes
 {
     public enum Directions
     {
@@ -41,6 +43,30 @@
             this.PlayerSpeed = 1;
             this.BombType = BombType.Basic;
             TemporaryStats = new List<PlayerTemporaryStats>();
+        }
+
+        public PlayerSnapshot SnapshotPlayerInfo()
+        {
+            return new PlayerSnapshot(
+                Position, 
+                Direction, 
+                BombExplosionRadius, 
+                Score, 
+                BombType, 
+                PlayerSpeed, 
+                TemporaryStats
+           );
+        }
+
+        public void ApplySnapshot(PlayerSnapshot snapshot)
+        {
+            Position = snapshot.Position;
+            Direction = snapshot.Direction;
+            BombExplosionRadius = snapshot.BombExplosionRadius;
+            Score = snapshot.Score;
+            BombType = snapshot.BombType;
+            PlayerSpeed = snapshot.PlayerSpeed;
+            TemporaryStats = snapshot.TemporaryStats;
         }
 
         public void AddNewStat(PlayerTemporaryStats stat)

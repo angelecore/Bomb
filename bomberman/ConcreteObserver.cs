@@ -89,8 +89,6 @@ namespace bomberman
             label.Text = "Inventory";
             label.BackColor = Color.Transparent;
             this.Controls.Add(label);
-
-  
         }
 
         private void UpdateInventory()
@@ -266,6 +264,7 @@ namespace bomberman
             foreach (var scoreEvent in gameState.scoreEvents)
             {
                 destroyedBlockScoreHandler.Handle(scoreEvent, gameState.GetOwnerPlayer());
+                destroyedBlockScoreHandler.Handle(scoreEvent, gameState.GetEnemyPlayer());
             }
 
             gameState.scoreEvents.Clear();
@@ -319,6 +318,9 @@ namespace bomberman
                     break;
                 case ScorePowerupStrategy:
                     sprite = Properties.Resources.scorePowerupIcon;
+                    break;
+                case ReversePowerupStrategy:
+                    sprite = Properties.Resources.reversePowerupIcon;
                     break;
             }
 
@@ -437,6 +439,16 @@ namespace bomberman
             playerSprites[playerId] = (PlayerModel)playerModel.decorate();
             this.Controls.AddRange(playerSprites[playerId].GetControls());
             playerSprites[playerId].BringToFront();
+        }
+
+        public void SetPlayerPosition(string playerId, Vector2f newPosition)
+        {
+            playerSprites[playerId].UpdatePosition(
+                new Point(
+                    newPosition.X * Constants.BLOCK_SIZE,
+                    newPosition.Y * Constants.BLOCK_SIZE
+                )
+            );
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
