@@ -1,4 +1,5 @@
 ﻿using bomberman.classes.facade;
+using bomberman.classes.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace bomberman.classes
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
 
+        public List<RegenerationTimer> RegenTimer = new List<RegenerationTimer>();
+
         private ConcreteObserver form;
 
         public void SetForm(ConcreteObserver form)
@@ -48,6 +51,14 @@ namespace bomberman.classes
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
+        public void killPlayer(Block block)
+        {
+            foreach(Player player in players)
+            {
+                if(player.Position.Equals(block.Position))
+                    player.IsAlive= false;
+            }
+        }
         public int GetGridIndex(Vector2f position)
         {
             return position.Y * GameDataSingleton.GetInstance().Width + position.X;
@@ -60,12 +71,19 @@ namespace bomberman.classes
                 //cell.Type = BlockType.Fire;
             //else
             bool flag = false;
-            if(cell.Type != BlockType.Empty)
+            if(cell.Type == BlockType.Destructable)
             {
                 scoreEvents.Add(BlockType.Empty);
                 flag = true;
             }
-            cell.Type = BlockType.Empty;
+            if (cell.Type == BlockType.Regenerating)
+            { 
+                cell.Type = BlockType.Stanby;
+                RegenTimer.Add(new RegenerationTimer(8, cell));
+
+            }
+            else
+                cell.Type = BlockType.Empty;
 
             int gridIndex = GetGridIndex(position);
             //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
@@ -190,7 +208,7 @@ namespace bomberman.classes
                 }
                 
                  //Destroy this block and stop the explosion in this direction
-                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || bombReached)
+                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || Grid[pos.Y, pos.X].Type == BlockType.Regenerating || bombReached)
                 {
                     RemoveBox(owner, pos);
                 }
@@ -379,7 +397,7 @@ namespace bomberman.classes
 
         private void LoadMap()
         {
-            var maplayout = Properties.Resources.Level1;
+            var maplayout = Properties.Resources.Level2;
             GameDataSingleton.GetInstance().SetHeight(maplayout.Split("\r\n").Length);
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
@@ -412,6 +430,9 @@ namespace bomberman.classes
                                 break;
                             case '.':
                                 type = BlockType.Empty;
+                                break;
+                            case 'r':
+                                type = BlockType.Regenerating;
                                 break;
                             default:
                                 possiblePlayerPos.Add(new Vector2f(currentCollum, currentRow));

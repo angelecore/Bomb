@@ -5,13 +5,17 @@
         InDestructable,
         Destructable,
         Empty,
-        Fire
+        Fire,
+        Stanby,
+        Regenerating
     }
 
     public class Block
     {
         public Vector2f Position;
         public BlockType Type { get; set; }
+
+        public float regentimer = 0;
 
         public Block(Vector2f position, BlockType objType)
         {
