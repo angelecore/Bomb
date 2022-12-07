@@ -1,5 +1,7 @@
 using bomberman.classes;
+using bomberman.classes.COR;
 using bomberman.classes.decorator;
+using bomberman.classes.interpreter;
 using bomberman.client;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -40,6 +42,11 @@ namespace bomberman
         private Stopwatch stopwatch = new Stopwatch();
 
         CommandResolver commandResolver;
+
+        private Interpreter interpreter;
+
+        private DestroyedBlockScoreHandler destroyedBlockScoreHandler;
+
         public ConcreteObserver(string name)
         {
             InitializeComponent();
@@ -47,6 +54,8 @@ namespace bomberman
             gameState = new GameState(name);
             gameState.SetForm(this);
             commandResolver = new CommandResolver();
+            interpreter = new Interpreter(this);
+            destroyedBlockScoreHandler = new DestroyedBlockScoreHandler();
             filePath = string.Format("{0}-logs.txt", gameState.PlayerName);
 
             CreateMap();
@@ -95,6 +104,7 @@ namespace bomberman
 
             SetBaseInvetoryStats(new string[]
             {
+                String.Format("Score: {0}", ownerPlayer.Score),
                 String.Format("Name: {0}", ownerPlayer?.Name),
                 String.Format("Position: {0}", ownerPlayer?.Position),
                 String.Format("Speed: {0}", ownerPlayer?.PlayerSpeed),
@@ -249,6 +259,18 @@ namespace bomberman
             }
         }
 
+        public void updateScore()
+        {
+            destroyedBlockScoreHandler.setNext(new PowerupScoreHandler()).setNext(new PowerupPickupScoreHandler()).setNext(new MovementScoreHandler());
+
+            foreach (var scoreEvent in gameState.scoreEvents)
+            {
+                destroyedBlockScoreHandler.Handle(scoreEvent, gameState.GetOwnerPlayer());
+            }
+
+            gameState.scoreEvents.Clear();
+        }
+
         public void CreateMap()
         {
             // Create map
@@ -286,15 +308,18 @@ namespace bomberman
         public void CreatePowerupModel(Vector2f position, IPowerup powerup)
         {
             Bitmap sprite = null;
-            if (powerup is AddBombRadiusStrategy)
+
+            switch (powerup)
             {
-                sprite = Properties.Resources.bombRadiusPowerup;
-            } else if (powerup is SpeedPowerupStrategy)
-            {
-                sprite = Properties.Resources.speedPowerupIcon;
-            } else if (powerup is FreezeSpeedPowerupStrategy)
-            {
-                sprite = Properties.Resources.freezePowerup;
+                case AddBombRadiusStrategy:
+                    sprite = Properties.Resources.bombRadiusPowerup;
+                    break;
+                case SpeedPowerupStrategy:
+                    sprite = Properties.Resources.speedPowerupIcon;
+                    break;
+                case ScorePowerupStrategy:
+                    sprite = Properties.Resources.scorePowerupIcon;
+                    break;
             }
 
             var powerupModel = new PowerupModel(
@@ -377,6 +402,12 @@ namespace bomberman
             bombSprites[bomb.Id].BringToFront();
             //playerSprites[id].BringToFront();
         }
+
+        public GameState getGameState()
+        {
+            return this.gameState;
+        }
+
         private void HandlePlayerJoined(string id, string userName)
         {
             var pos = gameState.AddEnemy(id, userName);
@@ -465,6 +496,8 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
+
+            updateScore();
 
             // End the game
             if (this.Visible && (gameStatus == GameStatus.Won || gameStatus == GameStatus.Lost || gameStatus == GameStatus.Tie))
@@ -586,6 +619,21 @@ namespace bomberman
                 case Keys.Enter:
                 case Keys.Space:
                     SendBombCommandToServer();
+                    break;
+                case Keys.Oem3:
+                    if (!interpreter.active())
+                    {
+                        interpreter.changeInterpreterMode();
+                        Console.WriteLine("\n");
+                        Console.WriteLine("Enter command");
+                        string value = Console.ReadLine();
+                        interpreter.Execute(value);
+                        Console.WriteLine();
+                    }
+
+                    break;
+                default:
+                    Console.WriteLine();
                     break;
             }
         }
