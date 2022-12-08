@@ -3,9 +3,9 @@ using WebSocketSharp;
 
 namespace bomberman
 {
-    public partial class Form2 : Form
+    public partial class JoinForm : Form
     {
-        public Form2(int leftOffset, int topOffset)
+        public JoinForm(int leftOffset, int topOffset)
         {
             this.StartPosition = FormStartPosition.Manual;
             this.Left = leftOffset;

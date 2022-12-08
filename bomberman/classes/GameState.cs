@@ -213,13 +213,11 @@ namespace bomberman.classes
                 ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
 
                 // If another bomb is also is this direction, then also explode this bomb next tic.
-                bool bombReached = false;
                 foreach (var anotherBomb in Bombs)
                 {
                     if (anotherBomb.Position.Equals(pos))
                     {
                         anotherBomb.Timer = 0;
-                        bombReached = true;
                     }
                 }
 
@@ -230,6 +228,7 @@ namespace bomberman.classes
                         player.IsAlive = false;
                     }
                 }
+
                 var tyle = Grid[pos.Y, pos.X];
                 if (owner.BombType == BombType.Fire)
                 {
@@ -240,11 +239,9 @@ namespace bomberman.classes
                     tyle.Type = BlockType.Fire;
                 }
                 
-                 //Destroy this block and stop the explosion in this direction
-                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || bombReached)
-                {
-                    RemoveBox(owner, pos);
-                }
+                 // Destroy this block
+                 RemoveBox(owner, pos);
+                
             }
         }
 

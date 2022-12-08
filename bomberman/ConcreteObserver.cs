@@ -2,6 +2,7 @@ using bomberman.classes;
 using bomberman.classes.COR;
 using bomberman.classes.decorator;
 using bomberman.classes.interpreter;
+using bomberman.classes.proxy;
 using bomberman.client;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -41,7 +42,7 @@ namespace bomberman
 
         private Stopwatch stopwatch = new Stopwatch();
 
-        CommandResolver commandResolver;
+        ICommandMiddleware commandResolver;
 
         private Interpreter interpreter;
 
@@ -53,7 +54,7 @@ namespace bomberman
 
             gameState = new GameState(name);
             gameState.SetForm(this);
-            commandResolver = new CommandResolver();
+            commandResolver = new CommandMiddleware();
             interpreter = new Interpreter(this);
             destroyedBlockScoreHandler = new DestroyedBlockScoreHandler();
             filePath = string.Format("{0}-logs.txt", gameState.PlayerName);
@@ -377,23 +378,23 @@ namespace bomberman
                     break;
                 case "Move":
                     var split2 = value.Split(" ");
-                    commandResolver.setCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
+                    commandResolver.SetCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
                     break;
                 case "Bomb":
-                    commandResolver.setCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
+                    commandResolver.SetCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
                     break;
                 case "Logs":
                     filePath = string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName);
                     var logs = JsonConvert.DeserializeObject<List<string>>(value);
-                    commandResolver.setCommand(new LogsCommand(logs, filePath), true);
+                    commandResolver.SetCommand(new LogsCommand(logs, filePath), true);
                     break;
                 case "UndoLogs":
-                    commandResolver.setCommand(new LogsCommand(null, filePath), false);
+                    commandResolver.SetCommand(new LogsCommand(null, filePath), false);
                     break;
             }
 
-            commandResolver.activate();
-            commandResolver.clearCommand();
+            commandResolver.Activate();
+            commandResolver.ClearCommand();
         }
         public void handlebombclonning(Bomb bomb)
         {

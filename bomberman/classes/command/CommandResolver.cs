@@ -1,4 +1,5 @@
-﻿using System;
+﻿using bomberman.classes.proxy;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    public class CommandResolver
+    public class CommandResolver : ICommandMiddleware
     {
         ICommand ?command;
         bool isActivate;
@@ -15,19 +16,19 @@ namespace bomberman.classes
             command = null;
             isActivate = true;
         }
-        public void setCommand(ICommand command, bool isActivate)
+        public void SetCommand(ICommand command, bool isActivate)
         {
             this.command = command;
             this.isActivate = isActivate;
         }
 
-        public void clearCommand()
+        public void ClearCommand()
         {
             this.command = null;
             this.isActivate = true;
         }
 
-        public void activate()
+        public void Activate()
         {
             if (command != null && isActivate)
             {
