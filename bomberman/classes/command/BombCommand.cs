@@ -35,11 +35,6 @@ namespace bomberman.classes
 
         public void execute()
         {
-            if (GameDataSingleton.GetInstance().CurrentGameStatus == GameStatus.WaitingForPlayers)
-            {
-                return;
-            }
-
             var bomb = gameState.PlaceBomb(id);
             if (bomb == null) return;
             bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), Properties.Resources.bombSprite);
