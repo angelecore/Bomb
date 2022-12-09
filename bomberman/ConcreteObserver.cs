@@ -269,7 +269,7 @@ namespace bomberman
 
             foreach (var scoreEvent in gameState.scoreEvents)
             {
-                destroyedBlockScoreHandler.Handle(scoreEvent, gameState.GetOwnerPlayer());
+                destroyedBlockScoreHandler.Handle(scoreEvent.Item1, scoreEvent.Item2);
             }
 
             gameState.scoreEvents.Clear();
@@ -316,16 +316,16 @@ namespace bomberman
             switch (powerup)
             {
                 case AddBombRadiusStrategy:
-                    sprite = flyweightFactory.getFlyweight("bombRadiusPowerup").getSprite();
-                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.bombRadiusPowerup, "bombRadiusPowerup").getSprite();
+                    sprite = flyweightFactory.getFlyweight(Constants.SPRITE_BOMB_RADIUS_POWERUP).getSprite();
+                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.bombRadiusPowerup, Constants.SPRITE_BOMB_RADIUS_POWERUP).getSprite();
                     break;
                 case SpeedPowerupStrategy:
-                    sprite = flyweightFactory.getFlyweight("speedPowerupIcon").getSprite();
-                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.speedPowerupIcon, "speedPowerupIcon").getSprite();
+                    sprite = flyweightFactory.getFlyweight(Constants.SPRITE_SPEED_POWERUP).getSprite();
+                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.speedPowerupIcon, Constants.SPRITE_SPEED_POWERUP).getSprite();
                     break;
                 case ScorePowerupStrategy:
-                    sprite = flyweightFactory.getFlyweight("scorePowerupIcon").getSprite();
-                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.scorePowerupIcon, "scorePowerupIcon").getSprite();
+                    sprite = flyweightFactory.getFlyweight(Constants.SPRITE_SCORE_POWERUP).getSprite();
+                    if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.scorePowerupIcon, Constants.SPRITE_SCORE_POWERUP).getSprite();
                     break;
             }
 
@@ -342,8 +342,8 @@ namespace bomberman
 
         public void CreateDynamiteModel(Vector2f position, IBombtype dymamite)
         {
-            var sprite = flyweightFactory.getFlyweight("dynamite").getSprite();
-            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.dynamite, "dynamite").getSprite();
+            var sprite = flyweightFactory.getFlyweight(Constants.SPRITE_DYNAMITE).getSprite();
+            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.dynamite, Constants.SPRITE_DYNAMITE).getSprite();
 
             var DynamiteModel = new PowerupModel(
                 new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE),
@@ -405,8 +405,8 @@ namespace bomberman
         }
         public void handlebombclonning(Bomb bomb)
         {
-            var sprite = flyweightFactory.getFlyweight("bombSprite").getSprite();
-            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.bombSprite, "bombSprite").getSprite();
+            var sprite = flyweightFactory.getFlyweight(Constants.SPRITE_BOMB).getSprite();
+            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.bombSprite, Constants.SPRITE_BOMB).getSprite();
             bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), sprite);
             setBombSprites(bombSprites);
             Controls.AddRange(bombSprites[bomb.Id].GetControls());
@@ -443,8 +443,8 @@ namespace bomberman
         {
             var bombCount = gameState.getBombsByPlayerId(playerId).Count();
             var point = new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE);
-            var sprite = flyweightFactory.getFlyweight("character_positioned").getSprite();
-            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.character_positioned, "character_positioned").getSprite();
+            var sprite = flyweightFactory.getFlyweight(Constants.SPRITE_CHARACTER).getSprite();
+            if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.character_positioned, Constants.SPRITE_CHARACTER).getSprite();
             var playerModel = new PlayerBombsCount(new PlayerName(new PlayerSprite(new PlayerModel(playerName, bombCount, point, sprite))));
             playerSprites[playerId] = (PlayerModel)playerModel.decorate();
             this.Controls.AddRange(playerSprites[playerId].GetControls());

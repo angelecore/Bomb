@@ -27,7 +27,7 @@ namespace bomberman.classes
 
         public List<Bomb> Bombs = new List<Bomb>();
 
-        public List<object> scoreEvents = new List<object>();
+        public List<Tuple<object, Player>> scoreEvents = new List<Tuple<object, Player>>();
 
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
@@ -62,7 +62,7 @@ namespace bomberman.classes
             bool flag = false;
             if(cell.Type != BlockType.Empty)
             {
-                scoreEvents.Add(BlockType.Empty);
+                scoreEvents.Add(new Tuple<object, Player>(BlockType.Empty, responsiblePlayer));
                 flag = true;
             }
             cell.Type = BlockType.Empty;
@@ -319,22 +319,12 @@ namespace bomberman.classes
             {
                 playerMovementFacade.movePlayer();
             }
-
-            /*var newDirection = playerMovementFacade.getNewDirection();
-
-            // if the player was already moving, then update its position
-            if (player.Direction != Directions.Idle && player.Direction != newDirection)
-            {
-                MovePlayer(player);
-            }
-
-            player.SetDirection(newDirection);*/
         }
 
         public void MovePlayer(Player player)
         {
             player.Move();
-            scoreEvents.Add(Constants.SCORE_STRATEGY_MOVEMENT);
+            scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_MOVEMENT, player));
 
             int gridIndex = GetGridIndex(player.Position);
             var cell = Grid[player.Position.Y,player.Position.X];
@@ -344,7 +334,8 @@ namespace bomberman.classes
             if (Powerups.ContainsKey(gridIndex))
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
-                scoreEvents.Add(Powerups[gridIndex]);
+                scoreEvents.Add(new Tuple<object, Player>(Powerups[gridIndex], player));
+
                 Powerups.Remove(gridIndex);
             }
             if (Bombtypes.ContainsKey(gridIndex))
