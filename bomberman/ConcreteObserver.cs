@@ -3,7 +3,6 @@ using bomberman.classes.COR;
 using bomberman.classes.decorator;
 using bomberman.classes.flyweight;
 using bomberman.classes.interpreter;
-using bomberman.classes.Timers;
 using bomberman.classes.proxy;
 using bomberman.client;
 using Newtonsoft.Json;
@@ -38,8 +37,6 @@ namespace bomberman
             { BlockType.Destructable, Color.DarkGray },
             { BlockType.InDestructable, Color.Black },
             { BlockType.Fire, Color.Red },
-            { BlockType.Regenerating, Color.Gold },
-            { BlockType.Stanby, Color.Pink },
         };
 
         GameState gameState;
@@ -184,29 +181,6 @@ namespace bomberman
                     gameState.FireList.Remove(fire);
                 foreach (FireController fire in ControllerRemove)
                     gameState.FireControllerList.Remove(fire);
-            }
-        }
-
-        private void UpdateRegen()
-        {
-            TimeSpan temp = stopwatch.Elapsed;
-            List<RegenerationTimer> RegenRemove = new List<RegenerationTimer>();
-            foreach (RegenerationTimer regen in gameState.RegenTimer)
-            {
-
-                if (regen.Timer <= 0)
-                {
-                    Vector2f possition = regen.RegeneratingBlock.Position;
-                    gameState.Grid[possition.Y,possition.X].Type = BlockType.Regenerating;
-                    RegenRemove.Add(regen);
-                    gameState.killPlayer(regen.RegeneratingBlock);
-                }
-                regen.Timer -= (float)temp.TotalMilliseconds * 0.001f;
-            }
-            if (RegenRemove.Count > 0)
-            {
-                foreach (RegenerationTimer remove in RegenRemove)
-                    gameState.RegenTimer.Remove(remove);
             }
         }
 
@@ -546,8 +520,6 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
-
-            UpdateRegen();
 
             updateScore();
 

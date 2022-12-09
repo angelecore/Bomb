@@ -19,7 +19,7 @@ namespace bomberman.classes.facade
         {
             var nextPosition = Utils.AddVectors(player.Position, dirVector);
 
-            return grid[nextPosition.Y, nextPosition.X].Type == BlockType.Empty || grid[nextPosition.Y, nextPosition.X].Type == BlockType.Fire || grid[nextPosition.Y, nextPosition.X].Type == BlockType.Stanby;
+            return grid[nextPosition.Y, nextPosition.X].Type == BlockType.Empty || grid[nextPosition.Y, nextPosition.X].Type == BlockType.Fire;
         }
     }
 }
