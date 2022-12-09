@@ -1,6 +1,6 @@
 ﻿namespace bomberman
 {
-    partial class Form2
+    partial class JoinForm
     {
         /// <summary>
         /// Required designer variable.

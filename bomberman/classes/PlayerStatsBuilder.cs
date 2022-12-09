@@ -10,8 +10,6 @@ namespace bomberman.classes
     {
         private PlayerTemporaryStats _stats  = new PlayerTemporaryStats();
 
-
-
         public PlayerStatsBuilder WithRadius(int radius)
         {
             _stats.AddRadiusAmount = radius;

@@ -21,11 +21,6 @@ namespace bomberman.classes
 
         public void execute()
         {
-            if (GameDataSingleton.GetInstance().CurrentGameStatus == GameStatus.WaitingForPlayers)
-            {
-                return;
-            }
-
             gameState.PerformAction(playerId, direction);
         }
 
