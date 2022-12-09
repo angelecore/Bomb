@@ -64,7 +64,7 @@ namespace bomberman.classes
             return position.Y * GameDataSingleton.GetInstance().Width + position.X;
         }
 
-        private void RemoveBox(Player responsiblePlayer, Vector2f position)
+        private void RemoveBox(Player responsiblePlayer, Vector2f position, bool fireflag)
         {
             var cell = Grid[position.Y, position.X];
             //if(responsiblePlayer.BombType == BombType.Fire)
@@ -78,7 +78,8 @@ namespace bomberman.classes
             }
             if (cell.Type == BlockType.Regenerating)
             { 
-                cell.Type = BlockType.Stanby;
+                cell.Type = BlockType.Empty;
+                if(!fireflag)
                 RegenTimer.Add(new RegenerationTimer(8, cell));
 
             }
@@ -198,6 +199,7 @@ namespace bomberman.classes
                     }
                 }
                 var tyle = Grid[pos.Y, pos.X];
+                bool fireflag = false;
                 if (owner.BombType == BombType.Fire)
                 {
                     FireController clone = (FireController) fire.Clone();
@@ -205,12 +207,13 @@ namespace bomberman.classes
                     clone.BlockY = pos.Y;
                     FireControllerList.Add(clone);
                     tyle.Type = BlockType.Fire;
+                    fireflag = true;
                 }
                 
                  //Destroy this block and stop the explosion in this direction
                 if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || Grid[pos.Y, pos.X].Type == BlockType.Regenerating || bombReached)
                 {
-                    RemoveBox(owner, pos);
+                    RemoveBox(owner, pos, fireflag);
                 }
             }
         }
