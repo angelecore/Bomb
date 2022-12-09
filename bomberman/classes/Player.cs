@@ -1,4 +1,6 @@
-﻿namespace bomberman.classes
+﻿using bomberman.classes.memento;
+
+namespace bomberman.classes
 {
     public enum Directions
     {
@@ -43,6 +45,30 @@
             TemporaryStats = new List<PlayerTemporaryStats>();
         }
 
+        public PlayerSnapshot SnapshotPlayerInfo()
+        {
+            return new PlayerSnapshot(
+                Position, 
+                Direction, 
+                BombExplosionRadius, 
+                Score, 
+                BombType, 
+                PlayerSpeed, 
+                TemporaryStats
+           );
+        }
+
+        public void ApplySnapshot(PlayerSnapshot snapshot)
+        {
+            Position = snapshot.Position;
+            Direction = snapshot.Direction;
+            BombExplosionRadius = snapshot.BombExplosionRadius;
+            Score = snapshot.Score;
+            BombType = snapshot.BombType;
+            PlayerSpeed = snapshot.PlayerSpeed;
+            TemporaryStats = snapshot.TemporaryStats;
+        }
+
         public void AddNewStat(PlayerTemporaryStats stat)
         {
             TemporaryStats.Add(stat);
@@ -56,6 +82,10 @@
                 if (!stats.Applied)
                 {
                     this.PlayerSpeed += stats.AddSpeedAmount ?? 0;
+                    if (this.PlayerSpeed < 0)
+                    {
+                        this.PlayerSpeed = 0;
+                    }
                     this.BombExplosionRadius += stats.AddRadiusAmount ?? 0;
                     stats.Applied = true;
                 }
@@ -67,6 +97,11 @@
                 if (stats.ActiveTimer != null && stats.ActiveTimer < 1.0)
                 {
                     this.PlayerSpeed -= stats.AddSpeedAmount ?? 0;
+                    if (this.PlayerSpeed > 1)
+                    {
+                        this.PlayerSpeed = 1;
+                    }
+
                     this.BombExplosionRadius -= stats.AddRadiusAmount ?? 0;
                     TemporaryStats.RemoveAt(i);
                 }

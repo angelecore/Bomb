@@ -3,6 +3,7 @@ using bomberman.classes.COR;
 using bomberman.classes.decorator;
 using bomberman.classes.flyweight;
 using bomberman.classes.interpreter;
+using bomberman.classes.proxy;
 using bomberman.client;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -42,7 +43,7 @@ namespace bomberman
 
         private Stopwatch stopwatch = new Stopwatch();
 
-        CommandResolver commandResolver;
+        ICommandMiddleware commandResolver;
 
         private Interpreter interpreter;
 
@@ -57,7 +58,7 @@ namespace bomberman
             flyweightFactory = new FlyweightFactory(Utils.GetSpriteTuplesList());
             gameState = new GameState(name);
             gameState.SetForm(this);
-            commandResolver = new CommandResolver();
+            commandResolver = new CommandMiddleware();
             interpreter = new Interpreter(this);
             destroyedBlockScoreHandler = new DestroyedBlockScoreHandler();
             filePath = string.Format("{0}-logs.txt", gameState.PlayerName);
@@ -93,8 +94,6 @@ namespace bomberman
             label.Text = "Inventory";
             label.BackColor = Color.Transparent;
             this.Controls.Add(label);
-
-  
         }
 
         private void UpdateInventory()
@@ -327,6 +326,9 @@ namespace bomberman
                     sprite = flyweightFactory.getFlyweight(Constants.SPRITE_SCORE_POWERUP).getSprite();
                     if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.scorePowerupIcon, Constants.SPRITE_SCORE_POWERUP).getSprite();
                     break;
+                case ReversePowerupStrategy:
+                    sprite = Properties.Resources.reversePowerupIcon;
+                    break;
             }
 
             var powerupModel = new PowerupModel(
@@ -385,23 +387,23 @@ namespace bomberman
                     break;
                 case "Move":
                     var split2 = value.Split(" ");
-                    commandResolver.setCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
+                    commandResolver.SetCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
                     break;
                 case "Bomb":
-                    commandResolver.setCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
+                    commandResolver.SetCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
                     break;
                 case "Logs":
                     filePath = string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName);
                     var logs = JsonConvert.DeserializeObject<List<string>>(value);
-                    commandResolver.setCommand(new LogsCommand(logs, filePath), true);
+                    commandResolver.SetCommand(new LogsCommand(logs, filePath), true);
                     break;
                 case "UndoLogs":
-                    commandResolver.setCommand(new LogsCommand(null, filePath), false);
+                    commandResolver.SetCommand(new LogsCommand(null, filePath), false);
                     break;
             }
 
-            commandResolver.activate();
-            commandResolver.clearCommand();
+            commandResolver.Activate();
+            commandResolver.ClearCommand();
         }
         public void handlebombclonning(Bomb bomb)
         {
@@ -449,6 +451,16 @@ namespace bomberman
             playerSprites[playerId] = (PlayerModel)playerModel.decorate();
             this.Controls.AddRange(playerSprites[playerId].GetControls());
             playerSprites[playerId].BringToFront();
+        }
+
+        public void SetPlayerPosition(string playerId, Vector2f newPosition)
+        {
+            playerSprites[playerId].UpdatePosition(
+                new Point(
+                    newPosition.X * Constants.BLOCK_SIZE,
+                    newPosition.Y * Constants.BLOCK_SIZE
+                )
+            );
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)

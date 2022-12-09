@@ -6,15 +6,11 @@ using System.Threading.Tasks;
 
 namespace bomberman.classes
 {
-    internal class AddBombRadiusStrategy : IPowerup
+    public class ReversePowerupStrategy : IPowerup
     {
         public void ApplyPowerUp(GameState gameState, Player player)
         {
-            player.AddNewStat(new PlayerStatsBuilder()
-                .WithRadius(1)
-                .Build()
-
-            );
+            gameState.ActivateReverseMode(player);
         }
     }
 }

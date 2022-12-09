@@ -42,7 +42,7 @@ namespace bomberman
                 .Run();
 
 
-            var context = new MultiFormContext(new Form2(100, 100), new Form2(1000, 100));
+            var context = new MultiFormContext(new JoinForm(100, 100), new JoinForm(1000, 100));
             Application.Run(context);
         }
 
