@@ -62,7 +62,7 @@ namespace bomberman.classes
             bool flag = false;
             if(cell.Type != BlockType.Empty)
             {
-                scoreEvents.Add(new Tuple<object, Player>(BlockType.Empty, responsiblePlayer));
+                scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_DESTROYED_BLOCK, responsiblePlayer));
                 flag = true;
             }
             cell.Type = BlockType.Empty;
@@ -283,6 +283,11 @@ namespace bomberman.classes
                 .ToList();
         }
 
+        public Player GetPlayerById(string id)
+        {
+            return players.Where(p => p.Id == id).First();
+        }
+
         public Bomb? PlaceBomb(string playerId)
         {
             var player = players.Find(p => p.Id == playerId);
@@ -334,7 +339,13 @@ namespace bomberman.classes
             if (Powerups.ContainsKey(gridIndex))
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
-                scoreEvents.Add(new Tuple<object, Player>(Powerups[gridIndex], player));
+                scoreEvents.Add(
+                    new Tuple<object, Player>(
+                            Powerups[gridIndex].GetType() is ScorePowerupStrategy ? 
+                            Constants.SCORE_STRATEGY_SCORE_POWERUP : Constants.SCORE_STRATEGY_PICKUP_POWERUP,
+                            player
+                        )
+                    );
 
                 Powerups.Remove(gridIndex);
             }

@@ -58,5 +58,51 @@ namespace bomberman.classes
                        .Select(x => new Tuple<Bitmap, string>((Bitmap)x.Value, (string)x.Key))
                        .ToList();
         }
+
+        public static string GetConcatenatedEventsForScore(List<Tuple<object, Player>> scoreEvents)
+        {
+            string concatenatedEvents = "";
+
+            foreach (var scoreEvent in scoreEvents)
+            {
+                 concatenatedEvents += scoreEvent.Item1.ToString() + "." + scoreEvent.Item2.Id.ToString() + "-";
+            }
+
+            return concatenatedEvents;
+        }
+
+        public static bool CheckConcatenatedEventsForScoreHasGivenEvent(string concatenatedEventsForScore, string eventString)
+        {
+            var eventStrings = concatenatedEventsForScore.Split("-");
+
+            foreach (var concatenatedEventString in eventStrings)
+            {
+                var splitString = concatenatedEventString.Split(".");
+
+                if (splitString.Contains(eventString))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static string GetConcatenatedEventsForScorePlayerId(string concatenatedEventsForScore, string eventString)
+        {
+            var eventStrings = concatenatedEventsForScore.Split("-");
+
+            foreach (var concatenatedEventString in eventStrings)
+            {
+                var splitString = concatenatedEventString.Split(".");
+
+                if (splitString.Contains(eventString))
+                {
+                    return splitString[1];
+                }
+            }
+
+            return "";
+        }
     }
 }

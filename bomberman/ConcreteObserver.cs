@@ -267,10 +267,9 @@ namespace bomberman
         {
             destroyedBlockScoreHandler.setNext(new PowerupScoreHandler()).setNext(new PowerupPickupScoreHandler()).setNext(new MovementScoreHandler());
 
-            foreach (var scoreEvent in gameState.scoreEvents)
-            {
-                destroyedBlockScoreHandler.Handle(scoreEvent.Item1, scoreEvent.Item2);
-            }
+            var concatenatedEvents = Utils.GetConcatenatedEventsForScore(gameState.scoreEvents);
+
+            destroyedBlockScoreHandler.Handle(concatenatedEvents, gameState);
 
             gameState.scoreEvents.Clear();
         }

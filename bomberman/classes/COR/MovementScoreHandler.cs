@@ -8,18 +8,15 @@ namespace bomberman.classes.COR
 {
     public class MovementScoreHandler : ScoreHandler
     {
-        public override object Handle(object request, Player player)
+        public override object Handle(string eventsString, GameState gameState)
         {
-            if ((request as string) == Constants.SCORE_STRATEGY_MOVEMENT && player is not null)
+            if (Utils.CheckConcatenatedEventsForScoreHasGivenEvent(eventsString, Constants.SCORE_STRATEGY_MOVEMENT))
             {
+                var player = gameState.GetPlayerById(Utils.GetConcatenatedEventsForScorePlayerId(eventsString, Constants.SCORE_STRATEGY_MOVEMENT));
                 player.Score += 1;
+            }
 
-                return null;
-            }
-            else
-            {
-                return base.Handle(request, player);
-            }
+            return base.Handle(eventsString, gameState);
         }
     }
 }
