@@ -5,6 +5,7 @@ using bomberman.classes.flyweight;
 using bomberman.classes.interpreter;
 using bomberman.classes.proxy;
 using bomberman.client;
+using bomberman.classes.Timers;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using WebSocketSharp;
@@ -548,6 +549,8 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
+
+            UpdateRegen();
 
             updateScore();
 

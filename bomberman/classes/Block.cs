@@ -5,7 +5,9 @@
         InDestructable,
         Destructable,
         Empty,
-        Fire
+        Fire,
+        Regenerating,
+
     }
 
     public class Block

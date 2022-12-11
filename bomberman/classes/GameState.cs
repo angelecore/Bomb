@@ -1,5 +1,6 @@
 ﻿using bomberman.classes.facade;
 using bomberman.classes.memento;
+using bomberman.classes.Timers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace bomberman.classes
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
 
+        public List<RegenerationTimer> RegenTimer = new List<RegenerationTimer>();
         private ConcreteObserver form;
 
         // key is the player id
@@ -102,7 +104,14 @@ namespace bomberman.classes
                 //cell.Type = BlockType.Fire;
             //else
             bool flag = false;
-            if(cell.Type != BlockType.Empty)
+            if (cell.Type == BlockType.Regenerating)
+            {
+                cell.Type = BlockType.Empty;
+                if(responsiblePlayer.BombType != BombType.Fire)
+                    RegenTimer.Add(new RegenerationTimer(8, cell));
+
+            }
+            else if (cell.Type != BlockType.Empty)
             {
                 scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_DESTROYED_BLOCK, responsiblePlayer));
                 flag = true;
@@ -445,7 +454,7 @@ namespace bomberman.classes
 
         private void LoadMap()
         {
-            var maplayout = Properties.Resources.Level1;
+            var maplayout = Properties.Resources.Level3;
             GameDataSingleton.GetInstance().SetHeight(maplayout.Split("\r\n").Length);
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
@@ -478,6 +487,9 @@ namespace bomberman.classes
                                 break;
                             case '.':
                                 type = BlockType.Empty;
+                                break;
+                            case 'r':
+                                type = BlockType.Regenerating;
                                 break;
                             default:
                                 possiblePlayerPos.Add(new Vector2f(currentCollum, currentRow));
