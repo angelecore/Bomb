@@ -39,7 +39,6 @@ namespace bomberman
             { BlockType.InDestructable, Color.Black },
             { BlockType.Fire, Color.Red },
             { BlockType.Regenerating, Color.Gold },
-            { BlockType.Stanby, Color.Pink },
         };
 
         GameState gameState;

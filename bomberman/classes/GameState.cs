@@ -263,10 +263,10 @@ namespace bomberman.classes
                 }
                 
                  //Destroy this block and stop the explosion in this direction
-                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || Grid[pos.Y, pos.X].Type == BlockType.Regenerating || bombReached)
-                {
+                
+                
                     RemoveBox(owner, pos, fireflag);
-                }
+                
             }
         }
 
@@ -448,7 +448,7 @@ namespace bomberman.classes
 
         private void LoadMap()
         {
-            var maplayout = Properties.Resources.Level1;
+            var maplayout = Properties.Resources.Level2;
             GameDataSingleton.GetInstance().SetHeight(maplayout.Split("\r\n").Length);
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))
