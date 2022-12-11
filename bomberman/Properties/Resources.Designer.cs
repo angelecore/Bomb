@@ -101,6 +101,16 @@ namespace bomberman.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap freezePowerup {
+            get {
+                object obj = ResourceManager.GetObject("freezePowerup", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to #############
         ///#1.c.cc..c..#
         ///#.#c#.#.#.#.#
@@ -135,6 +145,16 @@ namespace bomberman.Properties {
         internal static string Level2 {
             get {
                 return ResourceManager.GetString("Level2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap reversePowerupIcon {
+            get {
+                object obj = ResourceManager.GetObject("reversePowerupIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

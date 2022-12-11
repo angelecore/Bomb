@@ -10,7 +10,7 @@ namespace bomberman.server
 {
     public class ConcreteSubject : Subject
     {
-        WebSocketServer server = new WebSocketServer("ws://127.0.0.1:7980");
+        private readonly WebSocketServer server;
         public ConcreteSubject() : base()
         {
             server = new WebSocketServer("ws://127.0.0.1:7980");

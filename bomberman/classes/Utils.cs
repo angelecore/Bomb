@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +48,15 @@ namespace bomberman.classes
         public static Vector2f MultiplyVector(Vector2f vec, int number)
         {
             return new Vector2f(vec.X * number, vec.Y * number);
+        }
+
+        public static List<Tuple<Bitmap, string>> GetSpriteTuplesList()
+        {
+            return Properties.Resources.ResourceManager.GetResourceSet(CultureInfo.CurrentCulture, true, true)
+                       .Cast<DictionaryEntry>()
+                       .Where(x => x.Value.GetType() == typeof(Bitmap))
+                       .Select(x => new Tuple<Bitmap, string>((Bitmap)x.Value, (string)x.Key))
+                       .ToList();
         }
     }
 }

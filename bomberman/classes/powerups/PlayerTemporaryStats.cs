@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,13 @@ namespace bomberman.classes
         {
             Id = Guid.NewGuid().ToString();
             Applied = false;
+        }
+
+        public PlayerTemporaryStats DeepClone()
+        {
+            var serialized = JsonConvert.SerializeObject(this);
+
+            return JsonConvert.DeserializeObject<PlayerTemporaryStats>(serialized);     
         }
 
         public override string ToString()
