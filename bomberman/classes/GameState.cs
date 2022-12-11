@@ -54,6 +54,17 @@ namespace bomberman.classes
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
+        public void killPlayer(Vector2f pos)
+        {
+            foreach (var player in players)
+            {
+                if (player.Position.Equals(pos))
+                {
+                    player.IsAlive = false;
+                }
+            }
+        }
+
         public int GetGridIndex(Vector2f position)
         {
             return position.Y * GameDataSingleton.GetInstance().Width + position.X;
