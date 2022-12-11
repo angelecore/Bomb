@@ -17,11 +17,11 @@ namespace bomberman.classes.COR
             return scoreHandler;
         }
 
-        public virtual object Handle(object request, Player player)
+        public virtual object Handle(string eventsString, GameState gameState)
         {
             if (successor != null)
             {
-                return successor.Handle(request, player);
+                return successor.Handle(eventsString, gameState);
             }
             else
             {

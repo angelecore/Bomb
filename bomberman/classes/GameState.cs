@@ -1,5 +1,5 @@
 ﻿using bomberman.classes.facade;
-using bomberman.classes.Timers;
+using bomberman.classes.memento;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,16 +28,19 @@ namespace bomberman.classes
 
         public List<Bomb> Bombs = new List<Bomb>();
 
-        public List<object> scoreEvents = new List<object>();
+        public List<Tuple<object, Player>> scoreEvents = new List<Tuple<object, Player>>();
 
         // key is the index of the Grid tile
         public Dictionary<int, IPowerup> Powerups = new Dictionary<int, IPowerup>();
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
 
-        public List<RegenerationTimer> RegenTimer = new List<RegenerationTimer>();
-
         private ConcreteObserver form;
 
+        // key is the player id
+        // each player will have a seperate player snapshot manager
+        public Dictionary<string, PlayerSnapshotManager> PlayerSnapshots = new Dictionary<string, PlayerSnapshotManager>();
+
+        private float secondTimer = 1.0f;
         public void SetForm(ConcreteObserver form)
         {
             this.form = form;
@@ -51,6 +54,7 @@ namespace bomberman.classes
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
+
         public void killPlayer(Vector2f pos)
         {
             foreach (var player in players)
@@ -61,32 +65,50 @@ namespace bomberman.classes
                 }
             }
         }
+
         public int GetGridIndex(Vector2f position)
         {
             return position.Y * GameDataSingleton.GetInstance().Width + position.X;
         }
 
-        private void RemoveBox(Player responsiblePlayer, Vector2f position, bool fireflag)
+        public void ActivateReverseMode(Player initiator)
+        {
+            var affectedPlayer = players.SingleOrDefault(p => p.Id != initiator.Id);
+            if (affectedPlayer == null)
+            {
+                return;
+            }
+
+            PlayerSnapshot ?lastSnapshot = null;
+            for (int i = 0; i < 5; i++)
+            {
+                var snapshot = PlayerSnapshots[affectedPlayer.Id].PopLastSnapshot();
+                if (snapshot != null)
+                {
+                    lastSnapshot = snapshot;
+                }
+            }
+
+            if (lastSnapshot != null)
+            {
+                affectedPlayer.ApplySnapshot(lastSnapshot);
+                form.SetPlayerPosition(affectedPlayer.Id, affectedPlayer.Position);
+            }
+        }
+
+        private void RemoveBox(Player responsiblePlayer, Vector2f position)
         {
             var cell = Grid[position.Y, position.X];
             //if(responsiblePlayer.BombType == BombType.Fire)
                 //cell.Type = BlockType.Fire;
             //else
             bool flag = false;
-            if(cell.Type == BlockType.Destructable)
+            if(cell.Type != BlockType.Empty)
             {
-                scoreEvents.Add(BlockType.Empty);
+                scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_DESTROYED_BLOCK, responsiblePlayer));
                 flag = true;
             }
-            if (cell.Type == BlockType.Regenerating)
-            { 
-                cell.Type = BlockType.Empty;
-                if(!fireflag)
-                RegenTimer.Add(new RegenerationTimer(8, cell));
-
-            }
-            else
-                cell.Type = BlockType.Empty;
+            cell.Type = BlockType.Empty;
 
             int gridIndex = GetGridIndex(position);
             //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
@@ -167,12 +189,32 @@ namespace bomberman.classes
                 .ToList();
         }
 
-        public void UpdateTick(float miliSeconds)
+        public void UpdateTick(float miliSecondsPassed)
         {
-            foreach(var player in players)
+            bool takeSnapshot = false;
+            secondTimer -= miliSecondsPassed * 0.001f;
+            if (secondTimer <= 0)
             {
-                player.UpdateTemporaryStats(miliSeconds);
+                takeSnapshot = true;
+                secondTimer = 1.0f;
             }
+
+            foreach (var player in players)
+            {
+                player.UpdateTemporaryStats(miliSecondsPassed);
+
+                if (takeSnapshot)
+                {
+                    if (!PlayerSnapshots.ContainsKey(player.Id))
+                    {
+                        PlayerSnapshots.Add(player.Id, new PlayerSnapshotManager());
+                    }
+
+                    PlayerSnapshots[player.Id].AddSnapshot(player.SnapshotPlayerInfo());
+                }
+            }
+
+
         }
 
         public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, FireController fire)
@@ -183,13 +225,11 @@ namespace bomberman.classes
                 ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
 
                 // If another bomb is also is this direction, then also explode this bomb next tic.
-                bool bombReached = false;
                 foreach (var anotherBomb in Bombs)
                 {
                     if (anotherBomb.Position.Equals(pos))
                     {
                         anotherBomb.Timer = 0;
-                        bombReached = true;
                     }
                 }
 
@@ -200,8 +240,8 @@ namespace bomberman.classes
                         player.IsAlive = false;
                     }
                 }
+
                 var tyle = Grid[pos.Y, pos.X];
-                bool fireflag = false;
                 if (owner.BombType == BombType.Fire)
                 {
                     FireController clone = (FireController) fire.Clone();
@@ -209,14 +249,11 @@ namespace bomberman.classes
                     clone.BlockY = pos.Y;
                     FireControllerList.Add(clone);
                     tyle.Type = BlockType.Fire;
-                    fireflag = true;
                 }
                 
-                 //Destroy this block and stop the explosion in this direction
-                if (Grid[pos.Y, pos.X].Type == BlockType.Destructable || Grid[pos.Y, pos.X].Type == BlockType.Regenerating || bombReached)
-                {
-                    RemoveBox(owner, pos, fireflag);
-                }
+                 // Destroy this block
+                 RemoveBox(owner, pos);
+                
             }
         }
 
@@ -299,11 +336,21 @@ namespace bomberman.classes
             return players.SingleOrDefault(p => p.Id == PlayerId);
         }
 
+        public Player? GetEnemyPlayer()
+        {
+            return players.SingleOrDefault(p => p.Id != PlayerId);
+        }
+
         public List<Player> GetMovingPlayers()
         {
             return players
                 .Where(p => p.Direction != Directions.Idle)
                 .ToList();
+        }
+
+        public Player GetPlayerById(string id)
+        {
+            return players.Where(p => p.Id == id).First();
         }
 
         public Bomb? PlaceBomb(string playerId)
@@ -342,22 +389,12 @@ namespace bomberman.classes
             {
                 playerMovementFacade.movePlayer();
             }
-
-            /*var newDirection = playerMovementFacade.getNewDirection();
-
-            // if the player was already moving, then update its position
-            if (player.Direction != Directions.Idle && player.Direction != newDirection)
-            {
-                MovePlayer(player);
-            }
-
-            player.SetDirection(newDirection);*/
         }
 
         public void MovePlayer(Player player)
         {
             player.Move();
-            scoreEvents.Add(Constants.SCORE_STRATEGY_MOVEMENT);
+            scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_MOVEMENT, player));
 
             int gridIndex = GetGridIndex(player.Position);
             var cell = Grid[player.Position.Y,player.Position.X];
@@ -367,7 +404,14 @@ namespace bomberman.classes
             if (Powerups.ContainsKey(gridIndex))
             {
                 Powerups[gridIndex].ApplyPowerUp(this, player);
-                scoreEvents.Add(Powerups[gridIndex]);
+                scoreEvents.Add(
+                    new Tuple<object, Player>(
+                            Powerups[gridIndex].GetType() is ScorePowerupStrategy ? 
+                            Constants.SCORE_STRATEGY_SCORE_POWERUP : Constants.SCORE_STRATEGY_PICKUP_POWERUP,
+                            player
+                        )
+                    );
+
                 Powerups.Remove(gridIndex);
             }
             if (Bombtypes.ContainsKey(gridIndex))
@@ -435,9 +479,6 @@ namespace bomberman.classes
                                 break;
                             case '.':
                                 type = BlockType.Empty;
-                                break;
-                            case 'r':
-                                type = BlockType.Regenerating;
                                 break;
                             default:
                                 possiblePlayerPos.Add(new Vector2f(currentCollum, currentRow));

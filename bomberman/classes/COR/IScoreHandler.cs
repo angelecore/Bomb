@@ -10,6 +10,6 @@ namespace bomberman.classes.COR
     {
         IScoreHandler setNext(IScoreHandler handler);
 
-        object Handle(object request, Player player);
+        object Handle(string eventsString, GameState gameState);
     }
 }

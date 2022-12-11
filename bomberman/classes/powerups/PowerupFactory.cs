@@ -20,11 +20,20 @@ namespace bomberman.classes
                 return new SpeedPowerupStrategy();
             }
 
+            if (playerScore % 7 == 0)
+            {
+                return new FreezeSpeedPowerupStrategy();
+            }
+
             if (playerScore % 3 == 0)
             {
                 return new AddBombRadiusStrategy();
             }
 
+            if (playerScore % 4 == 0)
+            {
+                return new ReversePowerupStrategy();
+            }
             return null;
         }
     }
