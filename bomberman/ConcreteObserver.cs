@@ -184,6 +184,34 @@ namespace bomberman
             }
         }
 
+
+        private void UpdateRegen()
+        {
+            TimeSpan temp = stopwatch.Elapsed;
+            List<RegenerationTimer> RegenRemove = new List<RegenerationTimer>();
+            foreach (RegenerationTimer regen in gameState.RegenTimer)
+            {
+
+                if (regen.Timer <= 0)
+                {
+                    Vector2f possition = regen.RegeneratingBlock.Position;
+                    gameState.Grid[possition.Y,possition.X].Type = BlockType.Regenerating;
+                    RegenRemove.Add(regen);
+                    
+                }
+                regen.Timer -= (float)temp.TotalMilliseconds * 0.001f;
+            }
+            if (RegenRemove.Count > 0)
+            {
+                foreach (RegenerationTimer remove in RegenRemove)
+                { 
+                    gameState.RegenTimer.Remove(remove);
+                    gameState.killPlayer(remove.RegeneratingBlock.Position);
+                }
+            }
+        }
+
+
         private void SetBaseInvetoryStats(string[] texts)
         {
             if (invetoryTiles.Count < texts.Length)
