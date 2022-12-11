@@ -51,12 +51,14 @@ namespace bomberman.classes
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
-        public void killPlayer(Block block)
+        public void killPlayer(Vector2f pos)
         {
-            foreach(Player player in players)
+            foreach (var player in players)
             {
-                if(player.Position.Equals(block.Position))
-                    player.IsAlive= false;
+                if (player.Position.Equals(pos))
+                {
+                    player.IsAlive = false;
+                }
             }
         }
         public int GetGridIndex(Vector2f position)
@@ -400,7 +402,7 @@ namespace bomberman.classes
 
         private void LoadMap()
         {
-            var maplayout = Properties.Resources.Level2;
+            var maplayout = Properties.Resources.Level1;
             GameDataSingleton.GetInstance().SetHeight(maplayout.Split("\r\n").Length);
 
             using (System.IO.StringReader reader = new System.IO.StringReader(maplayout))

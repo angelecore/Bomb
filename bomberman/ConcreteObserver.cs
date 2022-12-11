@@ -196,14 +196,17 @@ namespace bomberman
                     Vector2f possition = regen.RegeneratingBlock.Position;
                     gameState.Grid[possition.Y,possition.X].Type = BlockType.Regenerating;
                     RegenRemove.Add(regen);
-                    gameState.killPlayer(regen.RegeneratingBlock);
+                    
                 }
                 regen.Timer -= (float)temp.TotalMilliseconds * 0.001f;
             }
             if (RegenRemove.Count > 0)
             {
                 foreach (RegenerationTimer remove in RegenRemove)
+                { 
                     gameState.RegenTimer.Remove(remove);
+                    gameState.killPlayer(remove.RegeneratingBlock.Position);
+                }
             }
         }
 
