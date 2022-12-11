@@ -3,7 +3,6 @@ using bomberman.classes.COR;
 using bomberman.classes.decorator;
 using bomberman.classes.flyweight;
 using bomberman.classes.interpreter;
-using bomberman.classes.Timers;
 using bomberman.classes.proxy;
 using bomberman.client;
 using Newtonsoft.Json;
@@ -39,6 +38,7 @@ namespace bomberman
             { BlockType.InDestructable, Color.Black },
             { BlockType.Fire, Color.Red },
             { BlockType.Regenerating, Color.Gold },
+
         };
 
         GameState gameState;
@@ -186,6 +186,7 @@ namespace bomberman
             }
         }
 
+
         private void UpdateRegen()
         {
             TimeSpan temp = stopwatch.Elapsed;
@@ -294,10 +295,9 @@ namespace bomberman
         {
             destroyedBlockScoreHandler.setNext(new PowerupScoreHandler()).setNext(new PowerupPickupScoreHandler()).setNext(new MovementScoreHandler());
 
-            foreach (var scoreEvent in gameState.scoreEvents)
-            {
-                destroyedBlockScoreHandler.Handle(scoreEvent.Item1, scoreEvent.Item2);
-            }
+            var concatenatedEvents = Utils.GetConcatenatedEventsForScore(gameState.scoreEvents);
+
+            destroyedBlockScoreHandler.Handle(concatenatedEvents, gameState);
 
             gameState.scoreEvents.Clear();
         }
@@ -548,8 +548,6 @@ namespace bomberman
 
             // Update fire refrence timers
             UpdateFire();
-
-            UpdateRegen();
 
             updateScore();
 

@@ -10,6 +10,9 @@ namespace bomberman.classes
     {
         public const int BLOCK_SIZE = 50;
         public const string SCORE_STRATEGY_MOVEMENT = "Moved";
+        public const string SCORE_STRATEGY_DESTROYED_BLOCK = "destroyedBlock";
+        public const string SCORE_STRATEGY_PICKUP_POWERUP = "pickupPowerup";
+        public const string SCORE_STRATEGY_SCORE_POWERUP = "scorePowerup";
         public const string SPRITE_BOMB = "bombSprite";
         public const string SPRITE_CHARACTER = "character_positioned";
         public const string SPRITE_BOMB_RADIUS_POWERUP = "bombRadiusPowerup";
