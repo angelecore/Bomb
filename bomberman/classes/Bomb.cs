@@ -16,12 +16,12 @@ namespace bomberman.classes
         public int Generation { get; set; }
         public IExplode ExplosionAlgoritham { get; set; }
 
-        public Bomb(Vector2f position, Player owner, int radius, int generation)
+        public Bomb(Vector2f position, Player owner, int radius, int generation, string id)
         {
             Position = position;
             Timer = 8.0f;
             Owner = owner;
-            Id = Guid.NewGuid().ToString();
+            Id = id;
             Radius = radius;
             this.Generation = generation;
         }
@@ -33,7 +33,7 @@ namespace bomberman.classes
         }
         public object Clone(Vector2f position, int generation)
         {
-            Bomb temp = new Bomb(position, this.Owner, this.Radius, generation);
+            Bomb temp = new Bomb(position, this.Owner, this.Radius, generation , Guid.NewGuid().ToString());
             temp.Timer = 2f;
             temp.ExplosionAlgoritham = this.ExplosionAlgoritham;
             return temp;

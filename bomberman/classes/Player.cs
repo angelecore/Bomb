@@ -41,7 +41,7 @@ namespace bomberman.classes
             this.BombExplosionRadius = 2;
             this.Score = 0;
             this.PlayerSpeed = 1;
-            this.BombType = BombType.Basic;
+            this.BombType = BombType.Cluster;
             TemporaryStats = new List<PlayerTemporaryStats>();
         }
 
