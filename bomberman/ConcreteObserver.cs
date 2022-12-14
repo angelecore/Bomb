@@ -9,6 +9,7 @@ using bomberman.classes.Timers;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using WebSocketSharp;
+using bomberman.classes.Compositetree;
 
 namespace bomberman
 {
@@ -623,6 +624,24 @@ namespace bomberman
             foreach (var bomb in gameState.Bombs)
             {
                 bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
+            }
+            foreach (var bomb in gameState.Bombs)
+            {
+                bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
+            }
+
+            foreach (var Tree in gameState.BombTrees)
+            {
+                foreach (ClusterBomb bomb in Tree.GetBombs())
+                {
+                    if (bomb.Timer > 1 && bomb.notExploded)
+                        bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
+                    /*if (bomb.Timer <= 0) 
+                    {
+                        RemoveControlsRange(bombSprites[bomb.Id].GetControls());
+                        bombSprites.Remove(bomb.Id); 
+                    }*/
+                }
             }
         }
 

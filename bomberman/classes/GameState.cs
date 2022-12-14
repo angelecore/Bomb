@@ -1,6 +1,7 @@
 ﻿using bomberman.classes.facade;
 using bomberman.classes.memento;
 using bomberman.classes.Timers;
+using bomberman.classes.Compositetree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace bomberman.classes
     {
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
+
+        public Composite composite { get; set; }
 
         public Block[,] Grid;
 
@@ -36,6 +39,8 @@ namespace bomberman.classes
         public Dictionary<int, IBombtype> Bombtypes = new Dictionary<int, IBombtype>();
 
         public List<RegenerationTimer> RegenTimer = new List<RegenerationTimer>();
+
+        public List<Component> BombTrees = new List<Component>();
         private ConcreteObserver form;
 
         // key is the player id
@@ -46,6 +51,7 @@ namespace bomberman.classes
         public void SetForm(ConcreteObserver form)
         {
             this.form = form;
+            
         }
 
         public GameState(string playerName, int maxPlayerCount = 2)
@@ -265,10 +271,42 @@ namespace bomberman.classes
             }
         }
 
+        public void RemoveExplodedTilesForCluster(List<Tuple<Vector2f, int, Component>> cells, Player owner)
+        {
+            foreach (var cell in cells)
+            {
+                var pos = cell.Item1;
+                ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
+
+                // If another bomb is also is this direction, then also explode this bomb next tic.
+                foreach (var anotherBomb in Bombs)
+                {
+                    if (anotherBomb.Position.Equals(pos))
+                    {
+                        anotherBomb.Timer = 0;
+                    }
+                }
+
+                foreach (var player in players)
+                {
+                    if (player.Position.Equals(pos))
+                    {
+                        player.IsAlive = false;
+                    }
+                }
+                // Destroy this block
+                RemoveBox(owner, pos);
+
+            }
+        }
+
         public List<Bomb> UpdateBombTimers(float miliSeconds)
         {
             var explodedBombs = new List<Bomb>();
-            for(int i = Bombs.Count - 1; i >= 0; i--)
+
+            
+
+            for (int i = Bombs.Count - 1; i >= 0; i--)
             {
                 var bomb = Bombs[i];
                 // 1 tick
@@ -285,7 +323,7 @@ namespace bomberman.classes
                         FireList.Add(fire);
                     }
                     Bombs.RemoveAt(i);
-                    Console.WriteLine(cells.GetType());
+                    
                     RemoveExplodedTiles(cells, bomb.Owner, controller);
                     explodedBombs.Add(bomb);
                     if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)
@@ -312,6 +350,79 @@ namespace bomberman.classes
                     }
                 }
             }
+            List<Composite> removeList = new List<Composite>();
+            foreach(Composite tree in BombTrees)
+            {
+                if(tree.Gettimer().Count <= 0)
+                {
+                    removeList.Add(tree);
+                    Console.WriteLine("exloded count" + tree.GetExplodedBombs().Count);
+                    continue;
+                }
+                
+                var timers = tree.updatetimer(miliSeconds);
+                int responsecount = tree.GetExplodedBombs().Count;
+                bool clusterflag = true;
+                List<Component> children = new List<Component>();
+                foreach (var timer in timers)
+                {
+                    if (timer.Item1 < 1)
+                    {
+                        ClusterBomb bomb = timer.Item2 as ClusterBomb;
+                        if (responsecount > 8 || (responsecount > (4 ^ (bomb.Radius - 1)) || tree.GetBombs().Count >= (4 ^ (bomb.Radius - 1))))
+                            clusterflag = false;
+                        var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+
+                        RemoveExplodedTilesForCluster(cells, bomb.Owner);
+                        explodedBombs.Add((ClusterBomb)timer.Item2);
+                        
+                        
+                        
+                        if (clusterflag)
+                        {
+                            foreach (var cell in cells)
+                            {
+                                bool flag = true;
+                                if (cell.Item1.Equals(bomb.Position))
+                                    continue;
+                                ClusterBomb clone = (ClusterBomb)bomb.Clone(cell.Item1);
+                                foreach (var otherBomb in Bombs)
+                                {
+                                    if (otherBomb.Position.Equals(clone.Position))
+                                    {
+                                        flag = false;
+                                    }
+                                }
+                                foreach (ClusterBomb otherBomb in tree.GetBombs())
+                                {
+                                    if (otherBomb.Position.Equals(clone.Position))
+                                    {
+                                        flag = false;
+                                    }
+                                }
+                                if (flag)
+                                {
+                                    children.Add(clone);
+                                    form.handlebombclonning(clone);
+                                }
+                            }
+                        }
+                        bomb.notExploded = false;
+                        
+                    }
+                }
+                if (children.Count > 0)
+                {
+                    Composite branch = new Composite();
+                    foreach (var child in children)
+                    {
+                        branch.AddBomb(child);
+                    }
+                    tree.AddBomb(branch);
+                }
+            }
+            foreach (Composite tree in removeList)
+                BombTrees.Remove(tree);
             return explodedBombs;
         }
 
@@ -377,12 +488,35 @@ namespace bomberman.classes
                     return null;
                 }
             }
+            foreach (var tree in BombTrees)
+            {
+                foreach (ClusterBomb otherBomb in tree.GetBombs())
+                {
+                    if (otherBomb.Position.Equals(player.Position))
+                    {
+                        return null;
+                    }
+                }
+            }
 
-            var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0);//BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
-            bomb.setExplosion(player.BombType);
-            Bombs.Add(bomb);
-
-            return bomb;
+            if (player.BombType != BombType.Cluster)
+            {
+                var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0, Guid.NewGuid().ToString());//BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
+                bomb.setExplosion(player.BombType);
+                Bombs.Add(bomb);
+                return bomb;
+            }
+            else
+            {
+                var clusterbomb = new ClusterBomb(player.Position, player, player.BombExplosionRadius, Guid.NewGuid().ToString());
+                Composite Tree = new Composite();
+                Composite branch = new Composite();
+                branch.AddBomb(clusterbomb);
+                Tree.AddBomb(branch);
+                BombTrees.Add(Tree);
+                return clusterbomb;
+            }
+            
         }
 
         public void PerformAction(string playerId, string action)
