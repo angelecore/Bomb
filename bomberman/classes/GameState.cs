@@ -112,7 +112,6 @@ namespace bomberman.classes
             bool flag = false;
             if (cell.Type == BlockType.Regenerating)
             {
-                cell.Type = BlockType.Empty;
                 if(responsiblePlayer.BombType != BombType.Fire)
                     RegenTimer.Add(new RegenerationTimer(8, cell));
 
@@ -122,8 +121,10 @@ namespace bomberman.classes
                 scoreEvents.Add(new Tuple<object, Player>(Constants.SCORE_STRATEGY_DESTROYED_BLOCK, responsiblePlayer));
                 flag = true;
             }
-            cell.Type = BlockType.Empty;
-
+            if (responsiblePlayer.BombType != BombType.Fire)
+                cell.ChangeState(BlockType.Empty);
+            else
+                cell.ChangeState(BlockType.Fire);
             int gridIndex = GetGridIndex(position);
             //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
             // add-on powerup logic!
@@ -262,7 +263,6 @@ namespace bomberman.classes
                     clone.BlockX = pos.X;
                     clone.BlockY = pos.Y;
                     FireControllerList.Add(clone);
-                    tyle.Type = BlockType.Fire;
                 }
                 
                  // Destroy this block

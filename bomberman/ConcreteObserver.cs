@@ -170,7 +170,7 @@ namespace bomberman
                     {
                         if (item.ID == fire.ID)
                         { 
-                            gameState.Grid[item.BlockY, item.BlockX].Type = BlockType.Empty;
+                            gameState.Grid[item.BlockY, item.BlockX].ChangeState(BlockType.Empty);
                             ControllerRemove.Add(item);
                         }
 
@@ -199,7 +199,7 @@ namespace bomberman
                 if (regen.Timer <= 0)
                 {
                     Vector2f possition = regen.RegeneratingBlock.Position;
-                    gameState.Grid[possition.Y,possition.X].Type = BlockType.Regenerating;
+                    gameState.Grid[possition.Y, possition.X].ChangeState(BlockType.Regenerating);
                     RegenRemove.Add(regen);
                     
                 }
