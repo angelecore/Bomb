@@ -16,10 +16,6 @@ namespace bomberman.classes.Compositetree
         {
             BombList.Add(ele);  
         }
-        public void ReplaceList(List<Component> branches)
-        {
-            BombList = branches;
-        }
 
         public void RemoveBomb(Component ele)
         {
@@ -97,16 +93,5 @@ namespace bomberman.classes.Compositetree
             return list;
         }
 
-        /*public List<Component> GetParent(Component PossibleParent)
-        {
-            Component returnable = null;
-            List<Component> list = new List<Component>();
-            foreach (Component bomb in BombList)
-            {
-                var temp = bomb.GetBombs();
-                foreach (Component item in temp)
-                    list.Add(item);
-            }
-        }*/
     }
 }

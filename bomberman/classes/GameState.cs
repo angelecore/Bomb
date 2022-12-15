@@ -361,7 +361,7 @@ namespace bomberman.classes
                 }
                 
                 var timers = tree.updatetimer(miliSeconds);
-                int responsecount = tree.GetExplodedBombs().Count;
+                int responsecount = tree.GetBranches().Count;
                 bool clusterflag = true;
                 List<Component> children = new List<Component>();
                 foreach (var timer in timers)
@@ -369,7 +369,7 @@ namespace bomberman.classes
                     if (timer.Item1 < 1)
                     {
                         ClusterBomb bomb = timer.Item2 as ClusterBomb;
-                        if (responsecount > 8 || (responsecount > (4 ^ (bomb.Radius - 1)) || tree.GetBombs().Count >= (4 ^ (bomb.Radius - 1))))
+                        if (responsecount > 8 || responsecount > bomb.Radius)
                             clusterflag = false;
                         var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
 
