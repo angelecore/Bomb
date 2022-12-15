@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 
 namespace bomberman.classes
 {
@@ -30,8 +31,6 @@ namespace bomberman.classes
 
         private List<Player> players = new List<Player>();
 
-        public List<Bomb> Bombs = new List<Bomb>();
-
         public List<Tuple<object, Player>> scoreEvents = new List<Tuple<object, Player>>();
 
         // key is the index of the Grid tile
@@ -40,26 +39,24 @@ namespace bomberman.classes
 
         public List<RegenerationTimer> RegenTimer = new List<RegenerationTimer>();
 
-        public List<Component> BombTrees = new List<Component>();
-        private ConcreteObserver form;
-
-        // key is the player id
-        // each player will have a seperate player snapshot manager
-        public Dictionary<string, PlayerSnapshotManager> PlayerSnapshots = new Dictionary<string, PlayerSnapshotManager>();
-
         private float secondTimer = 1.0f;
-        public void SetForm(ConcreteObserver form)
-        {
-            this.form = form;
-            
-        }
 
-        public GameState(string playerName, int maxPlayerCount = 2)
+        private GameManager _gameManager;
+
+        public GameState(string playerName, ConcreteObserver gameUI, int maxPlayerCount = 2)
         {
+            // init game manager (Mediator pattern)
+            _gameManager = new GameManager(this, gameUI);
+
             this.PlayerName = playerName;
             GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.WaitingForPlayers);
             LoadMap();
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
+        }
+
+        public GameManager GetGameManager()
+        {
+            return _gameManager;
         }
 
         public void killPlayer(Vector2f pos)
@@ -89,7 +86,7 @@ namespace bomberman.classes
             PlayerSnapshot ?lastSnapshot = null;
             for (int i = 0; i < 5; i++)
             {
-                var snapshot = PlayerSnapshots[affectedPlayer.Id].PopLastSnapshot();
+                var snapshot = _gameManager.PopLastSnapshot(initiator);
                 if (snapshot != null)
                 {
                     lastSnapshot = snapshot;
@@ -98,8 +95,7 @@ namespace bomberman.classes
 
             if (lastSnapshot != null)
             {
-                affectedPlayer.ApplySnapshot(lastSnapshot);
-                form.SetPlayerPosition(affectedPlayer.Id, affectedPlayer.Position);
+                _gameManager.ApplySnapshotToPlayer(affectedPlayer, lastSnapshot);
             }
         }
 
@@ -204,34 +200,6 @@ namespace bomberman.classes
                 .ToList();
         }
 
-        public void UpdateTick(float miliSecondsPassed)
-        {
-            bool takeSnapshot = false;
-            secondTimer -= miliSecondsPassed * 0.001f;
-            if (secondTimer <= 0)
-            {
-                takeSnapshot = true;
-                secondTimer = 1.0f;
-            }
-
-            foreach (var player in players)
-            {
-                player.UpdateTemporaryStats(miliSecondsPassed);
-
-                if (takeSnapshot)
-                {
-                    if (!PlayerSnapshots.ContainsKey(player.Id))
-                    {
-                        PlayerSnapshots.Add(player.Id, new PlayerSnapshotManager());
-                    }
-
-                    PlayerSnapshots[player.Id].AddSnapshot(player.SnapshotPlayerInfo());
-                }
-            }
-
-
-        }
-
         public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, FireController fire)
         {
             foreach(var cell in cells)
@@ -239,25 +207,9 @@ namespace bomberman.classes
                 var pos = cell.Item1;
                 ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
 
-                // If another bomb is also is this direction, then also explode this bomb next tic.
-                foreach (var anotherBomb in Bombs)
-                {
-                    if (anotherBomb.Position.Equals(pos))
-                    {
-                        anotherBomb.Timer = 0;
-                    }
-                }
+                _gameManager.ExplodePosition(pos);
 
-                foreach (var player in players)
-                {
-                    if (player.Position.Equals(pos))
-                    {
-                        player.IsAlive = false;
-                    }
-                }
-
-                var tyle = Grid[pos.Y, pos.X];
-                if (owner.BombType == BombType.Fire)
+                if (fire != null && owner.BombType == BombType.Fire)
                 {
                     FireController clone = (FireController) fire.Clone();
                     clone.BlockX = pos.X;
@@ -267,163 +219,23 @@ namespace bomberman.classes
                 
                  // Destroy this block
                  RemoveBox(owner, pos);
-                
             }
         }
 
-        public void RemoveExplodedTilesForCluster(List<Tuple<Vector2f, int, Component>> cells, Player owner)
+        public List<Tuple<Vector2f, int>> ExplodeBomb(Bomb bomb)
         {
-            foreach (var cell in cells)
+            Fire fire = null;
+            var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+            FireController controller = null;
+            if (bomb.Owner.BombType == BombType.Fire)
             {
-                var pos = cell.Item1;
-                ExplosionIntensity[pos.Y, pos.X] = cell.Item2;
-
-                // If another bomb is also is this direction, then also explode this bomb next tic.
-                foreach (var anotherBomb in Bombs)
-                {
-                    if (anotherBomb.Position.Equals(pos))
-                    {
-                        anotherBomb.Timer = 0;
-                    }
-                }
-
-                foreach (var player in players)
-                {
-                    if (player.Position.Equals(pos))
-                    {
-                        player.IsAlive = false;
-                    }
-                }
-                // Destroy this block
-                RemoveBox(owner, pos);
-
+                fire = new Fire(DateTime.Now.Millisecond.ToString());
+                controller = new FireController(fire.ID, fire, bomb.Position.X, bomb.Position.Y);
+                FireList.Add(fire);
             }
-        }
 
-        public List<Bomb> UpdateBombTimers(float miliSeconds)
-        {
-            var explodedBombs = new List<Bomb>();
-
-            
-
-            for (int i = Bombs.Count - 1; i >= 0; i--)
-            {
-                var bomb = Bombs[i];
-                // 1 tick
-                bomb.Timer -= (float)miliSeconds * 0.001f;
-                if (bomb.Timer < 1)
-                {
-                    Fire fire = null;
-                    var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
-                    FireController controller = null;
-                    if (bomb.Owner.BombType == BombType.Fire)
-                    {
-                        fire = new Fire(DateTime.Now.Millisecond.ToString());
-                        controller = new FireController(fire.ID,fire,bomb.Position.X,bomb.Position.Y);
-                        FireList.Add(fire);
-                    }
-                    Bombs.RemoveAt(i);
-                    
-                    RemoveExplodedTiles(cells, bomb.Owner, controller);
-                    explodedBombs.Add(bomb);
-                    if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)
-                    {
-                        foreach (var cell in cells)
-                        {
-                            bool flag = true;
-                            if (cell.Item1.Equals(bomb.Position))
-                                continue;
-                            Bomb clone = (Bomb) bomb.Clone(cell.Item1, bomb.Generation+1);
-                            foreach (var otherBomb in Bombs)
-                            {
-                                if (otherBomb.Position.Equals(clone.Position))
-                                {
-                                        flag=false;
-                                }
-                            }
-                            if (flag)
-                            {
-                                Bombs.Add(clone);
-                                form.handlebombclonning(clone);
-                            }
-                        }
-                    }
-                }
-            }
-            List<Composite> removeList = new List<Composite>();
-            foreach(Composite tree in BombTrees)
-            {
-                if(tree.Gettimer().Count <= 0)
-                {
-                    removeList.Add(tree);
-                    Console.WriteLine("exloded count" + tree.GetExplodedBombs().Count);
-                    continue;
-                }
-                
-                var timers = tree.updatetimer(miliSeconds);
-                int responsecount = tree.GetBranches().Count;
-                bool clusterflag = true;
-                List<Component> children = new List<Component>();
-                foreach (var timer in timers)
-                {
-                    if (timer.Item1 < 1)
-                    {
-                        ClusterBomb bomb = timer.Item2 as ClusterBomb;
-                        if (responsecount > 8 || responsecount > bomb.Radius)
-                            clusterflag = false;
-                        var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
-
-                        RemoveExplodedTilesForCluster(cells, bomb.Owner);
-                        explodedBombs.Add((ClusterBomb)timer.Item2);
-                        
-                        
-                        
-                        if (clusterflag)
-                        {
-                            foreach (var cell in cells)
-                            {
-                                bool flag = true;
-                                if (cell.Item1.Equals(bomb.Position))
-                                    continue;
-                                ClusterBomb clone = (ClusterBomb)bomb.Clone(cell.Item1);
-                                foreach (var otherBomb in Bombs)
-                                {
-                                    if (otherBomb.Position.Equals(clone.Position))
-                                    {
-                                        flag = false;
-                                    }
-                                }
-                                foreach (ClusterBomb otherBomb in tree.GetBombs())
-                                {
-                                    if (otherBomb.Position.Equals(clone.Position))
-                                    {
-                                        flag = false;
-                                    }
-                                }
-                                if (flag)
-                                {
-                                    children.Add(clone);
-                                    form.handlebombclonning(clone);
-                                }
-                            }
-                        }
-                        bomb.notExploded = false;
-                        
-                    }
-                }
-                if (children.Count > 0)
-                {
-                    Composite branch = new Composite();
-                    foreach (var child in children)
-                    {
-                        branch.AddBomb(child);
-                    }
-                    tree.AddBomb(branch);
-                }
-            }
-            foreach (Composite tree in removeList)
-                BombTrees.Remove(tree);
-            return explodedBombs;
+            RemoveExplodedTiles(cells, bomb.Owner, controller);
+            return cells;
         }
 
         public Vector2f AddOwner(string id)
@@ -432,6 +244,7 @@ namespace bomberman.classes
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
             players.Add(new Player(id, PlayerName, pos));
+            _gameManager.AddPlayer((players.Last()));
             return pos;
         }
 
@@ -446,6 +259,7 @@ namespace bomberman.classes
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
             players.Add(new Player(id, name, pos));
+            _gameManager.AddPlayer((players.Last()));
 
             return pos;
         }
@@ -473,50 +287,8 @@ namespace bomberman.classes
         }
 
         public Bomb? PlaceBomb(string playerId)
-        {
-            var player = players.Find(p => p.Id == playerId);
-            if (player == null) return null;
-
-            // Can't place a bomb while still moving
-            if (player.Direction != Directions.Idle) return null;
-
-            // can't place two bombs at the same spot
-            foreach(var otherBomb in Bombs)
-            {
-                if (otherBomb.Position.Equals(player.Position))
-                {
-                    return null;
-                }
-            }
-            foreach (var tree in BombTrees)
-            {
-                foreach (ClusterBomb otherBomb in tree.GetBombs())
-                {
-                    if (otherBomb.Position.Equals(player.Position))
-                    {
-                        return null;
-                    }
-                }
-            }
-
-            if (player.BombType != BombType.Cluster)
-            {
-                var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0, Guid.NewGuid().ToString());//BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
-                bomb.setExplosion(player.BombType);
-                Bombs.Add(bomb);
-                return bomb;
-            }
-            else
-            {
-                var clusterbomb = new ClusterBomb(player.Position, player, player.BombExplosionRadius, Guid.NewGuid().ToString());
-                Composite Tree = new Composite();
-                Composite branch = new Composite();
-                branch.AddBomb(clusterbomb);
-                Tree.AddBomb(branch);
-                BombTrees.Add(Tree);
-                return clusterbomb;
-            }
-            
+        { 
+            return _gameManager.PlaceBomb(playerId);
         }
 
         public void PerformAction(string playerId, string action)
@@ -578,7 +350,7 @@ namespace bomberman.classes
 
         public List<Bomb> getBombsByPlayerId(string id)
         {
-            return Bombs.FindAll(bomb => bomb.Owner.Id == id);
+            return new List<Bomb>();
         }
 
         public void setGameStatus(GameStatus gameStatus)

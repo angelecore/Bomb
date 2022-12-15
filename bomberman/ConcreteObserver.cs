@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using WebSocketSharp;
 using bomberman.classes.Compositetree;
+using bomberman.classes.mediator;
 
 namespace bomberman
 {
@@ -44,7 +45,7 @@ namespace bomberman
         };
 
         GameState gameState;
-
+        GameManager _gameManager;
         private Stopwatch stopwatch = new Stopwatch();
 
         ICommandMiddleware commandResolver;
@@ -60,8 +61,9 @@ namespace bomberman
             InitializeComponent();
 
             flyweightFactory = new FlyweightFactory(Utils.GetSpriteTuplesList());
-            gameState = new GameState(name);
-            gameState.SetForm(this);
+            gameState = new GameState(name, this);
+            _gameManager = gameState.GetGameManager();
+
             commandResolver = new CommandMiddleware();
             interpreter = new Interpreter(this);
             destroyedBlockScoreHandler = new DestroyedBlockScoreHandler();
@@ -529,10 +531,8 @@ namespace bomberman
             }
 
             TimeSpan ts = stopwatch.Elapsed;
-            gameState.UpdateTick((float)ts.TotalMilliseconds);
+            _gameManager.UpdateTick((float)ts.TotalMilliseconds);
 
-            // Update bomb timer labels and remove exploded bombs
-            UpdateBombs();
             // Update information on the map based on the new state
             UpdateMap();
 
@@ -609,40 +609,15 @@ namespace bomberman
             }
         }
 
-        private void UpdateBombs()
+        public void RemoveBomb(Bomb bomb)
         {
-            TimeSpan ts = stopwatch.Elapsed;
-            // Remove exploded bombs sprites and labels
-            var explodedBombs = gameState.UpdateBombTimers((float)ts.TotalMilliseconds);
-            foreach (var explodedBomb in explodedBombs)
-            {
-                RemoveControlsRange(bombSprites[explodedBomb.Id].GetControls());
-                bombSprites.Remove(explodedBomb.Id);
-            }
+            RemoveControlsRange(bombSprites[bomb.Id].GetControls());
+            bombSprites.Remove(bomb.Id);
+        }
 
-            // Update timer labels
-            foreach (var bomb in gameState.Bombs)
-            {
-                bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
-            }
-            foreach (var bomb in gameState.Bombs)
-            {
-                bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
-            }
-
-            foreach (var Tree in gameState.BombTrees)
-            {
-                foreach (ClusterBomb bomb in Tree.GetBombs())
-                {
-                    if (bomb.Timer > 1 && bomb.notExploded)
-                        bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
-                    /*if (bomb.Timer <= 0) 
-                    {
-                        RemoveControlsRange(bombSprites[bomb.Id].GetControls());
-                        bombSprites.Remove(bomb.Id); 
-                    }*/
-                }
-            }
+        public void UpdateBombTimer(Bomb bomb)
+        {
+            bombSprites[bomb.Id].UpdateTimer((int)bomb.Timer);
         }
 
         private void MoveAnimations()

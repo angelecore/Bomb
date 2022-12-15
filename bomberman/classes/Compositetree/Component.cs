@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace bomberman.classes.Compositetree
 {
     // tie kurie implementuoja sita interface gali buti dedami i composite
-    public interface  Component
+    public interface Component
     {
 
         public List<Tuple<Vector2f, int, Component>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
