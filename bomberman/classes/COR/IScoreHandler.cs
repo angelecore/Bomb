@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 
 namespace bomberman.classes.COR
 {
@@ -10,6 +11,6 @@ namespace bomberman.classes.COR
     {
         IScoreHandler setNext(IScoreHandler handler);
 
-        object Handle(string eventsString, GameState gameState);
+        object Handle(string eventsString, IGameManager gameManager);
     }
 }

@@ -4,26 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 
 namespace bomberman.classes
 {
     public class BombCommand : ICommand
     {
-        GameState gameState;
+        IGameManager gameManager;
 
         string id;
 
         public BombCommand(
-            GameState gameState,
+            IGameManager gameManager,
             string id
         ) {
-            this.gameState = gameState;
+            this.gameManager = gameManager;
             this.id = id;
         }
 
         public void execute()
         {
-            gameState.PlaceBomb(id);
+            gameManager.PlaceBomb(id);
         }
 
         public void undo()

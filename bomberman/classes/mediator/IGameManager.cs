@@ -19,6 +19,10 @@ namespace bomberman.classes.mediator
         public void ExplodePosition(Vector2f pos);
         public void UpdateTick(float miliSecondsPassed);
         public void AddSnapshot(Player player, PlayerSnapshot snapshot);
+        public void KillPlayer(Vector2f pos);
+        public int GetPlayerCount();
+        public Player? GetPlayerById(string playerId);
+        public List<Player> GetMovingPlayers();
 
     }
 }

@@ -154,6 +154,23 @@ namespace bomberman.classes.mediator
             _gameUI.UpdateBombTimer(bomb);
         }
 
+
+        public int GetPlayerCount()
+        {
+            return players.Count;
+        }
+
+        public void KillPlayer(Vector2f pos)
+        {
+            foreach (var player in players)
+            {
+                if (player.Position.Equals(pos))
+                {
+                    player.IsAlive = false;
+                }
+            }
+        }
+
         public void UpdateBombTimers(float miliSeconds)
         {
 
@@ -271,10 +288,23 @@ namespace bomberman.classes.mediator
             UpdateBombTimers(miliSecondsPassed);
         }
 
+        private void KillPlayer(Player p)
+        {
+            _gameUI.RemovePlayer(p);
+            players.Remove(p);
+        }
+
         private void UpdatePlayerTimer(float miliSecondsPassed, bool takeSnapshot)
         {
-            foreach (var player in players)
+            for (int i = players.Count - 1; i >=0; i--)
             {
+                var player = players[i];
+                if (!player.IsAlive)
+                {
+                    KillPlayer(player);
+                    continue;
+                }
+
                 player.UpdateTemporaryStats(miliSecondsPassed);
 
                 if (takeSnapshot)
@@ -294,5 +324,16 @@ namespace bomberman.classes.mediator
             PlayerSnapshots[player.Id].AddSnapshot(snapshot);
         }
 
+        public Player? GetPlayerById(string playerId)
+        {
+            return players.SingleOrDefault(p => p.Id == playerId);
+        }
+
+        public List<Player> GetMovingPlayers()
+        {
+            return players
+                .Where(p => p.Direction != Directions.Idle)
+                .ToList();
+        }
     }
 }

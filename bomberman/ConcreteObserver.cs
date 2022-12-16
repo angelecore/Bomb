@@ -212,7 +212,7 @@ namespace bomberman
                 foreach (RegenerationTimer remove in RegenRemove)
                 { 
                     gameState.RegenTimer.Remove(remove);
-                    gameState.killPlayer(remove.RegeneratingBlock.Position);
+                    _gameManager.KillPlayer(remove.RegeneratingBlock.Position);
                 }
             }
         }
@@ -297,11 +297,14 @@ namespace bomberman
 
         public void updateScore()
         {
+            if (GameDataSingleton.GetInstance().CurrentGameStatus != GameStatus.InProgress)
+                return;
+
             destroyedBlockScoreHandler.setNext(new PowerupScoreHandler()).setNext(new PowerupPickupScoreHandler()).setNext(new MovementScoreHandler());
 
             var concatenatedEvents = Utils.GetConcatenatedEventsForScore(gameState.scoreEvents);
 
-            destroyedBlockScoreHandler.Handle(concatenatedEvents, gameState);
+            destroyedBlockScoreHandler.Handle(concatenatedEvents, _gameManager);
 
             gameState.scoreEvents.Clear();
         }
@@ -422,7 +425,7 @@ namespace bomberman
                     commandResolver.SetCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
                     break;
                 case "Bomb":
-                    commandResolver.SetCommand(new BombCommand(gameState, value), true);
+                    commandResolver.SetCommand(new BombCommand(_gameManager, value), true);
                     break;
                 case "Logs":
                     filePath = string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName);
@@ -538,9 +541,6 @@ namespace bomberman
             // Update information on the map based on the new state
             UpdateMap();
 
-            // Remove dead players
-            RemoveDeadPlayers(gameState.GetKilledPlayers());
-
             // Update player bombs count label on sprite
             UpdatePlayerSpriteBombCount(gameState.GetOwnerPlayer());
 
@@ -590,17 +590,12 @@ namespace bomberman
             }
         }
 
-        private void RemoveDeadPlayers(List<Player> deadPlayers)
+        public void RemovePlayer(Player player)
         {
-            foreach(var player in deadPlayers)
-            {
-                RemoveControlsRange(playerSprites[player.Id].GetControls());
+            RemoveControlsRange(playerSprites[player.Id].GetControls());
 
-                playerSprites.Remove(player.Id);
+            playerSprites.Remove(player.Id);
 
-                // Now we can delete this player from the game
-                gameState.RemovePlayer(player.Id);
-            }
         }
 
         private void UpdatePlayerSpriteBombCount(Player? player)
@@ -624,7 +619,7 @@ namespace bomberman
 
         private void MoveAnimations()
         {
-            var movingPlayers = gameState.GetMovingPlayers();
+            var movingPlayers = _gameManager.GetMovingPlayers();
             foreach (var player in movingPlayers)
             {
                 int speed = 5 * player.PlayerSpeed;

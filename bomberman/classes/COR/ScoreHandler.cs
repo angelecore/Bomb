@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 
 namespace bomberman.classes.COR
 {
@@ -17,11 +18,11 @@ namespace bomberman.classes.COR
             return scoreHandler;
         }
 
-        public virtual object Handle(string eventsString, GameState gameState)
+        public virtual object Handle(string eventsString, IGameManager gameManager)
         {
             if (successor != null)
             {
-                return successor.Handle(eventsString, gameState);
+                return successor.Handle(eventsString, gameManager);
             }
             else
             {

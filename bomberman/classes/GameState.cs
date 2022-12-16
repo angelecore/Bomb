@@ -27,7 +27,6 @@ namespace bomberman.classes
 
         private List<Vector2f> possiblePlayerPos = new List<Vector2f>();
 
-        private List<Player> players = new List<Player>();
 
         public List<Tuple<object, Player>> scoreEvents = new List<Tuple<object, Player>>();
 
@@ -58,16 +57,6 @@ namespace bomberman.classes
             return _gameManager;
         }
 
-        public void killPlayer(Vector2f pos)
-        {
-            foreach (var player in players)
-            {
-                if (player.Position.Equals(pos))
-                {
-                    player.IsAlive = false;
-                }
-            }
-        }
 
         public int GetGridIndex(Vector2f position)
         {
@@ -154,36 +143,24 @@ namespace bomberman.classes
             var currentGameStatus = GameDataSingleton.GetInstance().CurrentGameStatus;
             if (currentGameStatus == GameStatus.WaitingForPlayers)
             {
-                if (players.Count == GameDataSingleton.GetInstance().MaxPlayerCount)
+                if (_gameManager.GetPlayerCount() == GameDataSingleton.GetInstance().MaxPlayerCount)
                 {
                     GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.InProgress);
                 }
             }
             else
             {
-                if (players.Count == 0)
+                if (_gameManager.GetPlayerCount() == 0)
                 {
                     GameDataSingleton.GetInstance().SetCurrentGameStatus(GameStatus.Tie);
                 }
 
-                if (players.Count == 1)
+                if (_gameManager.GetPlayerCount() == 1)
                 {
-                    GameDataSingleton.GetInstance().SetCurrentGameStatus(players.First().Id == PlayerId ? GameStatus.Won : GameStatus.Lost);
+                    GameDataSingleton.GetInstance().SetCurrentGameStatus(_gameManager.GetPlayerById(PlayerId)?.Id == PlayerId ? GameStatus.Won : GameStatus.Lost);
                 }
             }
 
-        }
-       
-        public void RemovePlayer(string playerId)
-        {
-            players.RemoveAll(p => p.Id == playerId);
-        }
-
-        public List<Player> GetKilledPlayers()
-        {
-            return players
-                .Where(p => !p.IsAlive)
-                .ToList();
         }
 
         public void RemoveExplodedTiles(List<Tuple<Vector2f, int>> cells, Player owner, FireController fire)
@@ -238,8 +215,7 @@ namespace bomberman.classes
             this.PlayerId = id;
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, PlayerName, pos, _gameManager));
-            _gameManager.RegisterPlayer((players.Last()));
+            _gameManager.RegisterPlayer(new Player(id, PlayerName, pos, _gameManager));
             return pos;
         }
 
@@ -253,37 +229,19 @@ namespace bomberman.classes
             }
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, name, pos, _gameManager));
-            _gameManager.RegisterPlayer((players.Last()));
+            _gameManager.RegisterPlayer(new Player(id, name, pos, _gameManager));
 
             return pos;
         }
 
         public Player? GetOwnerPlayer()
         {
-            return players.SingleOrDefault(p => p.Id == PlayerId);
-        }
-
-        public List<Player> GetMovingPlayers()
-        {
-            return players
-                .Where(p => p.Direction != Directions.Idle)
-                .ToList();
-        }
-
-        public Player GetPlayerById(string id)
-        {
-            return players.Where(p => p.Id == id).First();
-        }
-
-        public void PlaceBomb(string playerId)
-        { 
-            _gameManager.PlaceBomb(playerId);
+            return _gameManager.GetPlayerById(PlayerId);
         }
 
         public void PerformAction(string playerId, string action)
         {
-            var player = players.Find(p => p.Id == playerId);
+            var player = _gameManager.GetPlayerById(playerId);
 
             if (player == null) return;
 
