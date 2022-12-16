@@ -45,7 +45,7 @@ namespace bomberman
         };
 
         GameState gameState;
-        GameManager _gameManager;
+        IGameManager _gameManager;
         private Stopwatch stopwatch = new Stopwatch();
 
         ICommandMiddleware commandResolver;

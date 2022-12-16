@@ -16,8 +16,8 @@ namespace bomberman.classes
         public Player Owner { get; set; }
         public int Generation { get; set; }
         public IExplode ExplosionAlgoritham { get; set; }
-        protected GameManager _gameManager;
-        public Bomb(Vector2f position, Player owner, int radius, int generation, string id, GameManager gameManager)
+        protected IGameManager _gameManager;
+        public Bomb(Vector2f position, Player owner, int radius, int generation, string id, IGameManager gameManager)
         {
             Position = position;
             Timer = 8.0f;

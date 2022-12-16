@@ -39,7 +39,7 @@ namespace bomberman.classes
 
         private float secondTimer = 1.0f;
 
-        private GameManager _gameManager;
+        private IGameManager _gameManager;
         private int spawnIndex = 0;
 
         public GameState(string playerName, ConcreteObserver gameUI, int maxPlayerCount = 2)
@@ -53,7 +53,7 @@ namespace bomberman.classes
             GameDataSingleton.GetInstance().SetMaxPlayerCount(maxPlayerCount);
         }
 
-        public GameManager GetGameManager()
+        public IGameManager GetGameManager()
         {
             return _gameManager;
         }

@@ -13,7 +13,7 @@ namespace bomberman.classes.Compositetree
     {
         public bool notExploded { get; set; }
 
-        public ClusterBomb(Vector2f position, Player owner, int radius, string id, GameManager gameManager, int generation = 0) : 
+        public ClusterBomb(Vector2f position, Player owner, int radius, string id, IGameManager gameManager, int generation = 0) : 
             base(position, owner, radius, generation, id, gameManager)
         {
             notExploded = true;

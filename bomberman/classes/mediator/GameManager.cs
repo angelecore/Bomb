@@ -8,7 +8,7 @@ using bomberman.classes.memento;
 
 namespace bomberman.classes.mediator
 {
-    public class GameManager
+    public class GameManager : IGameManager
     {
         private List<Bomb> bombs = new List<Bomb>();
         private List<Player> players = new List<Player>();

@@ -33,8 +33,8 @@ namespace bomberman.classes
         public int PlayerSpeed { get; set; }
         public List<PlayerTemporaryStats> TemporaryStats { get; set; }
 
-        private GameManager _gameManager;
-        public Player(string id, string name, Vector2f position, GameManager gameManager)
+        private IGameManager _gameManager;
+        public Player(string id, string name, Vector2f position, IGameManager gameManager)
         {
             this.Id = id;
             this.Name = name;
