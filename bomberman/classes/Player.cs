@@ -1,4 +1,5 @@
-﻿using bomberman.classes.memento;
+﻿using bomberman.classes.mediator;
+using bomberman.classes.memento;
 
 namespace bomberman.classes
 {
@@ -31,7 +32,9 @@ namespace bomberman.classes
         public BombType BombType { get; set; }
         public int PlayerSpeed { get; set; }
         public List<PlayerTemporaryStats> TemporaryStats { get; set; }
-        public Player(string id, string name, Vector2f position)
+
+        private GameManager _gameManager;
+        public Player(string id, string name, Vector2f position, GameManager gameManager)
         {
             this.Id = id;
             this.Name = name;
@@ -41,11 +44,18 @@ namespace bomberman.classes
             this.BombExplosionRadius = 2;
             this.Score = 0;
             this.PlayerSpeed = 1;
-            this.BombType = BombType.Cluster;
+            this.BombType = BombType.Basic;
+            this._gameManager = gameManager;
             TemporaryStats = new List<PlayerTemporaryStats>();
         }
 
-        public PlayerSnapshot SnapshotPlayerInfo()
+        public void TakeSnapshot()
+        {
+            _gameManager.AddSnapshot(this, GetSnapshotPlayerInfo());
+        }
+
+
+        private PlayerSnapshot GetSnapshotPlayerInfo()
         {
             return new PlayerSnapshot(
                 Position, 

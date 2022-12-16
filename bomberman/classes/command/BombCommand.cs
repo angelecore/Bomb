@@ -11,37 +11,19 @@ namespace bomberman.classes
     {
         GameState gameState;
 
-        ConcreteObserver form;
-
-        Dictionary<string, PlayerModel> playerSprites;
-
-        Dictionary<string, BombModel> bombSprites;
-
         string id;
 
         public BombCommand(
             GameState gameState,
-            ConcreteObserver form,
-            Dictionary<string, PlayerModel> playerSprites,
-            Dictionary<string, BombModel> bombSprites,
             string id
         ) {
             this.gameState = gameState;
-            this.form = form;
-            this.playerSprites = playerSprites;
-            this.bombSprites = bombSprites;
             this.id = id;
         }
 
         public void execute()
         {
-            var bomb = gameState.PlaceBomb(id);
-            if (bomb == null) return;
-            bombSprites[bomb.Id] = new BombModel((int)bomb.Timer, new Point(bomb.Position.X * Constants.BLOCK_SIZE, bomb.Position.Y * Constants.BLOCK_SIZE), Properties.Resources.bombSprite);
-            form.setBombSprites(bombSprites);
-            form.Controls.AddRange(bombSprites[bomb.Id].GetControls());
-            bombSprites[bomb.Id].BringToFront();
-            playerSprites[id].BringToFront();      
+            gameState.PlaceBomb(id);
         }
 
         public void undo()

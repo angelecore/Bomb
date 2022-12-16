@@ -28,35 +28,60 @@ namespace bomberman.classes.mediator
             _gameUI = gameUI;
         }
 
-        public void AddBomb(Bomb bomb)
+        public void RegisterBomb(Bomb bomb)
         {
             bombs.Add(bomb);
         }
 
-        public void AddPlayer(Player player)
+        public void RegisterPlayer(Player player)
         {
             players.Add(player);
         }
 
-        public PlayerSnapshot PopLastSnapshot(Player forPlayer)
+        public void ApplyReversePlayerMode(Player initiator)
         {
-            return PlayerSnapshots[forPlayer.Id].PopLastSnapshot();
+            var affectedPlayer = players.SingleOrDefault(p => p.Id != initiator.Id);
+            if (affectedPlayer == null)
+            {
+                return;
+            }
+
+            PlayerSnapshot? lastSnapshot = null;
+            for (int i = 0; i < 5; i++)
+            {
+                var snapshot = PlayerSnapshots[affectedPlayer.Id].PopLastSnapshot();
+                if (snapshot != null)
+                {
+                    lastSnapshot = snapshot;
+                }
+            }
+
+            if (lastSnapshot != null)
+            {
+                affectedPlayer.ApplySnapshot(lastSnapshot);
+                _gameUI.SetPlayerPosition(affectedPlayer.Id, affectedPlayer.Position);
+            }
         }
 
-        public Bomb PlaceBomb(string playerId)
+        public int GetBombsCountByPlayerId(string playerId)
+        {
+            return bombs.Count(b => b.Owner.Id == playerId);
+        }
+
+        public void PlaceBomb(string playerId)
         {
             var player = players.Find(p => p.Id == playerId);
-            if (player == null) return null;
+            if (player == null) return;
 
             // Can't place a bomb while still moving
-            if (player.Direction != Directions.Idle) return null;
+            if (player.Direction != Directions.Idle) return;
 
             // can't place two bombs at the same spot
             foreach (var otherBomb in bombs)
             {
                 if (otherBomb.Position.Equals(player.Position))
                 {
-                    return null;
+                    return;
                 }
             }
 
@@ -66,29 +91,67 @@ namespace bomberman.classes.mediator
                 {
                     if (otherBomb.Position.Equals(player.Position))
                     {
-                        return null;
+                        return;
                     }
                 }
             }
 
             if (player.BombType != BombType.Cluster)
             {
-                var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0, Guid.NewGuid().ToString());//BombFactory.GetBombInstance(player.BombType, player.Position, player, player.BombExplosionRadius);
+                var bomb = new Bomb(player.Position, player, player.BombExplosionRadius, 0, Guid.NewGuid().ToString(), this);
                 bomb.setExplosion(player.BombType);
-                AddBomb(bomb);
-                return bomb;
+                RegisterBomb(bomb);
+                _gameUI.CreateBombObject(bomb);
             }
             else
             {
-                var clusterbomb = new ClusterBomb(player.Position, player, player.BombExplosionRadius, Guid.NewGuid().ToString());
+                var clusterbomb = new ClusterBomb(player.Position, player, player.BombExplosionRadius, Guid.NewGuid().ToString(), this);
                 Composite Tree = new Composite();
                 Composite branch = new Composite();
                 branch.AddBomb(clusterbomb);
                 Tree.AddBomb(branch);
                 BombTrees.Add(Tree);
-                return clusterbomb;
+                _gameUI.CreateBombObject(clusterbomb);
             }
 
+        }
+
+        public void ExplodeBomb(Bomb bomb)
+        {
+            if (bomb.Timer < 1)
+            {
+                var cells = _gameState.ExplodeBomb(bomb);
+                bombs.Remove(bomb);
+                _gameUI.RemoveBomb(bomb);
+
+                if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)
+                {
+                    foreach (var cell in cells)
+                    {
+                        bool flag = true;
+                        if (cell.Item1.Equals(bomb.Position))
+                            continue;
+                        Bomb clone = (Bomb)bomb.Clone(cell.Item1, bomb.Generation + 1);
+                        foreach (var otherBomb in bombs)
+                        {
+                            if (otherBomb.Position.Equals(clone.Position))
+                            {
+                                flag = false;
+                            }
+                        }
+                        if (flag)
+                        {
+                            bombs.Add(clone);
+                            _gameUI.CreateBombObject(clone);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void UpdateBombTimer(Bomb bomb)
+        {
+            _gameUI.UpdateBombTimer(bomb);
         }
 
         public void UpdateBombTimers(float miliSeconds)
@@ -96,39 +159,7 @@ namespace bomberman.classes.mediator
 
             for (int i = bombs.Count - 1; i >= 0; i--)
             {
-                var bomb = bombs[i];
-                // 1 tick
-                bomb.Timer -= (float)miliSeconds * 0.001f;
-                _gameUI.UpdateBombTimer(bomb);
-                if (bomb.Timer < 1)
-                {
-                    var cells = _gameState.ExplodeBomb(bomb);
-                    bombs.RemoveAt(i);
-                    _gameUI.RemoveBomb(bomb);
-
-                    if (bomb.Owner.BombType == BombType.Cluster && bomb.Generation < 2)
-                    {
-                        foreach (var cell in cells)
-                        {
-                            bool flag = true;
-                            if (cell.Item1.Equals(bomb.Position))
-                                continue;
-                            Bomb clone = (Bomb)bomb.Clone(cell.Item1, bomb.Generation + 1);
-                            foreach (var otherBomb in bombs)
-                            {
-                                if (otherBomb.Position.Equals(clone.Position))
-                                {
-                                    flag = false;
-                                }
-                            }
-                            if (flag)
-                            {
-                                bombs.Add(clone);
-                                _gameUI.handlebombclonning(clone);
-                            }
-                        }
-                    }
-                }
+                bombs[i].UpdateTimer(miliSeconds);
             }
 
             List<Composite> removeList = new List<Composite>();
@@ -147,9 +178,10 @@ namespace bomberman.classes.mediator
                 List<Component> children = new List<Component>();
                 foreach (var timer in timers)
                 {
+                    ClusterBomb bomb = timer.Item2 as ClusterBomb;
+                    _gameUI.UpdateBombTimer(bomb);
                     if (timer.Item1 < 1)
                     {
-                        ClusterBomb bomb = timer.Item2 as ClusterBomb;
                         if (responsecount > 8 || responsecount > bomb.Radius)
                             clusterflag = false;
                         var cells = _gameState.ExplodeBomb(bomb);
@@ -181,7 +213,7 @@ namespace bomberman.classes.mediator
                                 if (flag)
                                 {
                                     children.Add(clone);
-                                    _gameUI.handlebombclonning(clone);
+                                    _gameUI.CreateBombObject(clone);
                                 }
                             }
                         }
@@ -198,19 +230,6 @@ namespace bomberman.classes.mediator
                     tree.AddBomb(branch);
                 }
 
-                foreach (var Tree in BombTrees)
-                {
-                    foreach (ClusterBomb bomb in Tree.GetBombs())
-                    {
-                        if (bomb.Timer > 1 && bomb.notExploded)
-                            _gameUI.UpdateBombTimer(bomb);
-                        /*if (bomb.Timer <= 0) 
-                        {
-                            RemoveControlsRange(bombSprites[bomb.Id].GetControls());
-                            bombSprites.Remove(bomb.Id); 
-                        }*/
-                    }
-                }
 
             }
             foreach (Composite tree in removeList)
@@ -237,11 +256,6 @@ namespace bomberman.classes.mediator
             }
         }
 
-        public void ApplySnapshotToPlayer(Player p, PlayerSnapshot snapshot)
-        {
-            p.ApplySnapshot(snapshot);
-            _gameUI.SetPlayerPosition(p.Id, p.Position);
-        }
 
         public void UpdateTick(float miliSecondsPassed)
         {
@@ -263,15 +277,21 @@ namespace bomberman.classes.mediator
             {
                 player.UpdateTemporaryStats(miliSecondsPassed);
 
-                if (!takeSnapshot) continue;
-
-                if (!PlayerSnapshots.ContainsKey(player.Id))
+                if (takeSnapshot)
                 {
-                    PlayerSnapshots.Add(player.Id, new PlayerSnapshotManager());
+                    player.TakeSnapshot();
                 }
-
-                PlayerSnapshots[player.Id].AddSnapshot(player.SnapshotPlayerInfo());
             }
+        }
+
+        public void AddSnapshot(Player player, PlayerSnapshot snapshot)
+        {
+            if (!PlayerSnapshots.ContainsKey(player.Id))
+            {
+                PlayerSnapshots.Add(player.Id, new PlayerSnapshotManager());
+            }
+
+            PlayerSnapshots[player.Id].AddSnapshot(snapshot);
         }
 
     }

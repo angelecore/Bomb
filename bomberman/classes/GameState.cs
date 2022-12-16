@@ -17,8 +17,6 @@ namespace bomberman.classes
         public string PlayerName { get; set; }
         public string? PlayerId { get; set; }
 
-        public Composite composite { get; set; }
-
         public Block[,] Grid;
 
         public List<Fire> FireList = new List<Fire>();
@@ -42,6 +40,7 @@ namespace bomberman.classes
         private float secondTimer = 1.0f;
 
         private GameManager _gameManager;
+        private int spawnIndex = 0;
 
         public GameState(string playerName, ConcreteObserver gameUI, int maxPlayerCount = 2)
         {
@@ -77,26 +76,7 @@ namespace bomberman.classes
 
         public void ActivateReverseMode(Player initiator)
         {
-            var affectedPlayer = players.SingleOrDefault(p => p.Id != initiator.Id);
-            if (affectedPlayer == null)
-            {
-                return;
-            }
-
-            PlayerSnapshot ?lastSnapshot = null;
-            for (int i = 0; i < 5; i++)
-            {
-                var snapshot = _gameManager.PopLastSnapshot(initiator);
-                if (snapshot != null)
-                {
-                    lastSnapshot = snapshot;
-                }
-            }
-
-            if (lastSnapshot != null)
-            {
-                _gameManager.ApplySnapshotToPlayer(affectedPlayer, lastSnapshot);
-            }
+            _gameManager.ApplyReversePlayerMode(initiator);
         }
 
         private void RemoveBox(Player responsiblePlayer, Vector2f position)
@@ -122,45 +102,51 @@ namespace bomberman.classes
             else
                 cell.ChangeState(BlockType.Fire);
             int gridIndex = GetGridIndex(position);
-            //var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
+            // var temp = new List<BombType> { BombType.Fire, BombType.Fire, BombType.Fire };
             // add-on powerup logic!
-            //var random = new Random();
+            // var random = new Random();
             if (flag)
             {
-                if (responsiblePlayer.Score % 15 == 0)
+                // There's only 10 types of object that can spawn,
+                // if more is added you need to increase this number
+                spawnIndex = (spawnIndex + 1) % 9;
+
+                if (spawnIndex == 1)
                 {
-                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Basic));
+                    AddBombType(gridIndex, new ChangeBombTypeStrategy(BombType.Cluster));
                     return;
                 }
 
-                
-                if (responsiblePlayer.Score % 10 == 0)
+                if (spawnIndex == 2)
                 {
-                    //Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(temp[random.Next(0, 2)]));
-                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Cluster));
+                    AddBombType(gridIndex, new ChangeBombTypeStrategy(BombType.Fire));
                     return;
                 }
 
-                if (responsiblePlayer.Score % 8 == 0)
+                if (spawnIndex == 3)
                 {
-                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Fire));
+                    AddBombType(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
                     return;
                 }
 
-                // Every Sixth crate is a bomb change
-                if (responsiblePlayer.Score % 6 == 0)
-                {
-                    Bombtypes.Add(gridIndex, new ChangeBombTypeStrategy(BombType.Dynamite));
-                    return;
-                }
-
-                IPowerup ?newPowerup = PowerupFactory.GetPowerupInstance(responsiblePlayer.Score);
+                IPowerup ?newPowerup = PowerupFactory.GetPowerupInstance(spawnIndex);
                 if (newPowerup != null)
                 {
-                    Powerups.Add(gridIndex, newPowerup);
+                    if (!Powerups.ContainsKey(gridIndex))
+                    {
+                        Powerups.Add(gridIndex, newPowerup);
+                    }
                 }
             }
             //return;
+        }
+
+        public void AddBombType(int gridIndex, IBombtype bombType)
+        {
+            if (!Bombtypes.ContainsKey(gridIndex))
+            {
+                Bombtypes.Add(gridIndex, bombType);
+            }
         }
 
         public void CheckGameStatus()
@@ -225,7 +211,16 @@ namespace bomberman.classes
         public List<Tuple<Vector2f, int>> ExplodeBomb(Bomb bomb)
         {
             Fire fire = null;
-            var cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+            List<Tuple<Vector2f, int>> cells;
+            if (bomb is ClusterBomb)
+            {
+                cells = ((ClusterBomb)bomb).GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+            }
+            else
+            {
+                cells = bomb.GetExplosionPositions(Grid, (pos) => IsPositionValid(pos));
+            }
+
             FireController controller = null;
             if (bomb.Owner.BombType == BombType.Fire)
             {
@@ -243,8 +238,8 @@ namespace bomberman.classes
             this.PlayerId = id;
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, PlayerName, pos));
-            _gameManager.AddPlayer((players.Last()));
+            players.Add(new Player(id, PlayerName, pos, _gameManager));
+            _gameManager.RegisterPlayer((players.Last()));
             return pos;
         }
 
@@ -258,8 +253,8 @@ namespace bomberman.classes
             }
             var pos = this.possiblePlayerPos[0];
             possiblePlayerPos.RemoveAt(0);
-            players.Add(new Player(id, name, pos));
-            _gameManager.AddPlayer((players.Last()));
+            players.Add(new Player(id, name, pos, _gameManager));
+            _gameManager.RegisterPlayer((players.Last()));
 
             return pos;
         }
@@ -267,11 +262,6 @@ namespace bomberman.classes
         public Player? GetOwnerPlayer()
         {
             return players.SingleOrDefault(p => p.Id == PlayerId);
-        }
-
-        public Player? GetEnemyPlayer()
-        {
-            return players.SingleOrDefault(p => p.Id != PlayerId);
         }
 
         public List<Player> GetMovingPlayers()
@@ -286,9 +276,9 @@ namespace bomberman.classes
             return players.Where(p => p.Id == id).First();
         }
 
-        public Bomb? PlaceBomb(string playerId)
+        public void PlaceBomb(string playerId)
         { 
-            return _gameManager.PlaceBomb(playerId);
+            _gameManager.PlaceBomb(playerId);
         }
 
         public void PerformAction(string playerId, string action)
@@ -341,16 +331,6 @@ namespace bomberman.classes
                 && pos.Y >= 0 
                 && pos.X <= GameDataSingleton.GetInstance().Width - 1 
                 && pos.Y <= GameDataSingleton.GetInstance().Height - 1;
-        }
-
-        public void SetPlayerId(string id)
-        {
-            this.PlayerId = id;
-        }
-
-        public List<Bomb> getBombsByPlayerId(string id)
-        {
-            return new List<Bomb>();
         }
 
         public void setGameStatus(GameStatus gameStatus)

@@ -26,9 +26,9 @@ namespace bomberman.classes.Compositetree
             return BombList;
         }
 
-        public List<Tuple<Vector2f, int, Component>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
+        public List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
         {
-            var list = new List<Tuple<Vector2f, int, Component>>();
+            var list = new List<Tuple<Vector2f, int>>();
             foreach (Component bomb in BombList)
             {
                 var templist = bomb.GetExplosionPositions(grid, isPositionValid);

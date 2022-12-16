@@ -10,27 +10,27 @@ namespace bomberman.classes
     {
         public static IPowerup? GetPowerupInstance(int playerScore)
         {
-            if (playerScore % 7 == 0)
-            {
-                return new ScorePowerupStrategy();
-            }
-
-            if (playerScore % 5 == 0)
-            {
-                return new SpeedPowerupStrategy();
-            }
-
-            if (playerScore % 7 == 0)
-            {
-                return new FreezeSpeedPowerupStrategy();
-            }
-
-            if (playerScore % 3 == 0)
+            if (playerScore == 4)
             {
                 return new AddBombRadiusStrategy();
             }
 
-            if (playerScore % 4 == 0)
+            if (playerScore == 5)
+            {
+                return new ScorePowerupStrategy();
+            }
+
+            if (playerScore == 6)
+            {
+                return new SpeedPowerupStrategy();
+            }
+
+            if (playerScore == 7)
+            {
+                return new FreezeSpeedPowerupStrategy();
+            }
+
+            if (playerScore == 8)
             {
                 return new ReversePowerupStrategy();
             }

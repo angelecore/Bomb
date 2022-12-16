@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 using static ServiceStack.Diagnostics.Events;
 
 namespace bomberman.classes.Compositetree
@@ -10,35 +11,26 @@ namespace bomberman.classes.Compositetree
     //sita implementuoti kaip leaf
     public class ClusterBomb : Bomb, Component
     {
-        public string Id { get; set; }
-        public Vector2f Position { get; set; }
-        public float Timer { get; set; }
-        public int Radius { get; set; }
-        public Player Owner { get; set; }
-
         public bool notExploded { get; set; }
 
-        public ClusterBomb(Vector2f position, Player owner, int radius, string id, int generation = 0) : base(position, owner, radius, generation,id)
+        public ClusterBomb(Vector2f position, Player owner, int radius, string id, GameManager gameManager, int generation = 0) : 
+            base(position, owner, radius, generation, id, gameManager)
         {
-            Position = position;
-            Timer = 8.0f;
-            Owner = owner;
-            Id = id;
-            Radius = radius;
             notExploded = true;
         }
+
         public object Clone(Vector2f position)
         {
-            ClusterBomb temp = new ClusterBomb(position, this.Owner, this.Radius, Guid.NewGuid().ToString());
+            ClusterBomb temp = new ClusterBomb(position, this.Owner, this.Radius, Guid.NewGuid().ToString(), _gameManager);
             temp.Timer = 4f;
             return temp;
         }
 
-        public new List<Tuple<Vector2f, int, Component>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
+        public new List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid)
         {
             if (notExploded)
             {
-                var positions = new List<Tuple<Vector2f, int, Component>>();
+                var positions = new List<Tuple<Vector2f, int>>();
 
                 var directions = new List<Directions>() { Directions.Up, Directions.Down, Directions.Left, Directions.Right };
                 for (int i = 0; i < 2; i++)
@@ -55,15 +47,15 @@ namespace bomberman.classes.Compositetree
                             directions.RemoveAt(j);
                             continue;
                         }
-                        if (positions.Contains(new Tuple<Vector2f, int, Component>(newPos, (Radius - i) * 5, this)))
+                        if (positions.Contains(new Tuple<Vector2f, int>(newPos, (Radius - i) * 5)))
                             continue;
-                        positions.Add(new Tuple<Vector2f, int, Component>(newPos, (2 - i) * 5, this));
+                        positions.Add(new Tuple<Vector2f, int>(newPos, (2 - i) * 5));
                     }
                 }
 
                 return positions;
             }
-            else return new List<Tuple<Vector2f, int, Component>>();
+            else return new List<Tuple<Vector2f, int>>();
             
 
         }

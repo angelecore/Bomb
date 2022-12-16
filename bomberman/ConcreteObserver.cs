@@ -422,7 +422,7 @@ namespace bomberman
                     commandResolver.SetCommand(new MoveCommand(gameState, split2[0], split2[1]), true);
                     break;
                 case "Bomb":
-                    commandResolver.SetCommand(new BombCommand(gameState, this, playerSprites, bombSprites, value), true);
+                    commandResolver.SetCommand(new BombCommand(gameState, value), true);
                     break;
                 case "Logs":
                     filePath = string.Format("{0}-{1}-logs.txt", DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss"), gameState.PlayerName);
@@ -437,7 +437,9 @@ namespace bomberman
             commandResolver.Activate();
             commandResolver.ClearCommand();
         }
-        public void handlebombclonning(Bomb bomb)
+
+
+        public void CreateBombObject(Bomb bomb)
         {
             var sprite = flyweightFactory.getFlyweight(Constants.SPRITE_BOMB).getSprite();
             if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.bombSprite, Constants.SPRITE_BOMB).getSprite();
@@ -445,9 +447,9 @@ namespace bomberman
             setBombSprites(bombSprites);
             Controls.AddRange(bombSprites[bomb.Id].GetControls());
             bombSprites[bomb.Id].BringToFront();
-            //playerSprites[id].BringToFront();
+            BringPlayerSpritesToFront();
         }
-
+        
         public GameState getGameState()
         {
             return this.gameState;
@@ -475,7 +477,7 @@ namespace bomberman
 
         private void CreatePlayerSprite(string playerId, string playerName, Vector2f position)
         {
-            var bombCount = gameState.getBombsByPlayerId(playerId).Count();
+            var bombCount = _gameManager.GetBombsCountByPlayerId(playerId);
             var point = new Point(position.X * Constants.BLOCK_SIZE, position.Y * Constants.BLOCK_SIZE);
             var sprite = flyweightFactory.getFlyweight(Constants.SPRITE_CHARACTER).getSprite();
             if (sprite == null) sprite = flyweightFactory.addFlyweight(Properties.Resources.character_positioned, Constants.SPRITE_CHARACTER).getSprite();
@@ -605,7 +607,7 @@ namespace bomberman
         {
             if (player != null)
             {
-                playerSprites[player.Id].UpdatePlayerBombsPlaced(gameState.getBombsByPlayerId(player.Id).Count());
+                playerSprites[player.Id].UpdatePlayerBombsPlaced(_gameManager.GetBombsCountByPlayerId(player.Id));
             }
         }
 

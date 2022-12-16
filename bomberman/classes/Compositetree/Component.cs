@@ -10,7 +10,7 @@ namespace bomberman.classes.Compositetree
     public interface Component
     {
 
-        public List<Tuple<Vector2f, int, Component>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
+        public List<Tuple<Vector2f, int>> GetExplosionPositions(Block[,] grid, Func<Vector2f, bool> isPositionValid);
         public object Clone(Vector2f position);
 
         public List<Tuple<float, Component>> updatetimer(float miliSeconds);

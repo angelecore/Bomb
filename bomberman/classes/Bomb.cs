@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using bomberman.classes.mediator;
 
 namespace bomberman.classes
 {
@@ -15,8 +16,8 @@ namespace bomberman.classes
         public Player Owner { get; set; }
         public int Generation { get; set; }
         public IExplode ExplosionAlgoritham { get; set; }
-
-        public Bomb(Vector2f position, Player owner, int radius, int generation, string id)
+        protected GameManager _gameManager;
+        public Bomb(Vector2f position, Player owner, int radius, int generation, string id, GameManager gameManager)
         {
             Position = position;
             Timer = 8.0f;
@@ -24,6 +25,8 @@ namespace bomberman.classes
             Id = id;
             Radius = radius;
             this.Generation = generation;
+
+            _gameManager = gameManager;
         }
         //(Block[,] grid, Func<Vector2f, bool> isPositionValid)
 
@@ -31,9 +34,20 @@ namespace bomberman.classes
         {
             return ExplosionAlgoritham.ExplosionPossitions(grid, isPositionValid, this);
         }
+
+        public void UpdateTimer(float miliSecondsPassed)
+        {
+            Timer -= (float)miliSecondsPassed * 0.001f;
+            _gameManager.UpdateBombTimer(this);
+            if (Timer < 1)
+            {
+                _gameManager.ExplodeBomb(this);
+            }
+        }
+
         public object Clone(Vector2f position, int generation)
         {
-            Bomb temp = new Bomb(position, this.Owner, this.Radius, generation , Guid.NewGuid().ToString());
+            Bomb temp = new Bomb(position, this.Owner, this.Radius, generation , Guid.NewGuid().ToString(), _gameManager);
             temp.Timer = 2f;
             temp.ExplosionAlgoritham = this.ExplosionAlgoritham;
             return temp;
